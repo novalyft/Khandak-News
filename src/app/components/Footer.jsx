@@ -1,12 +1,53 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 
 export default function Footer() {
   const { t } = useTranslation("common");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: {
+            email: email,
+          },
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to subscribe to newsletter");
+      } else {
+        setSuccess(true);
+        setEmail(""); // Clear the email field on success
+        // Reset success message after 5 seconds
+        setTimeout(() => setSuccess(false), 5000);
+      }
+    } catch (err) {
+      console.error("Error subscribing to newsletter:", err);
+      setError(err.message || "Failed to subscribe to newsletter");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const categories = [
     [t("cat.editorial"), "article-category/editorial"],
@@ -33,20 +74,37 @@ export default function Footer() {
           <div className="bg-gray-300 text-black p-6 md:w-1/4 w-full text-center">
             <p className="mb-4">{t("newsletter.title")}</p>
 
-            <input
-              type="email"
-              name="subscribe-email"
-              placeholder={t("newsletter.emailPlaceholder")}
-              className="w-full px-3 py-2 rounded text-black bg-white"
-            />
+            <form onSubmit={handleNewsletterSubmit}>
+              <input
+                type="email"
+                name="subscribe-email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("newsletter.emailPlaceholder")}
+                required
+                disabled={loading}
+                className="w-full px-3 py-2 rounded text-black bg-white disabled:opacity-50"
+              />
 
-            <button
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mt-4 flex items-center gap-2 mx-auto cursor-pointer"
-              type="button"
-            >
-              <PaperAirplaneIcon className="w-5 h-5 -rotate-45 group-hover:translate-x-1 transition-transform" />
-              {t("newsletter.subscribe")}
-            </button>
+              <button
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mt-4 flex items-center gap-2 mx-auto cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
+                type="submit"
+                disabled={loading}
+              >
+                <PaperAirplaneIcon className="w-5 h-5 -rotate-45 group-hover:translate-x-1 transition-transform" />
+                {loading
+                  ? t("newsletter.subscribing") || "Subscribing..."
+                  : t("newsletter.subscribe")}
+              </button>
+            </form>
+
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+
+            {success && (
+              <p className="mt-2 text-sm text-green-600">
+                {t("newsletter.success") || "Successfully subscribed!"}
+              </p>
+            )}
           </div>
 
           <div

@@ -164,6 +164,18 @@ const getCategory = async (locale = null) => {
   return response.data;
 };
 
+const subscribeNewsletter = async (email) => {
+  const NEWSLETTER_URL = "api/news-letters";
+  const data = {
+    data: {
+      email: email,
+    },
+  };
+
+  const response = await apiService.post(NEWSLETTER_URL, data);
+  return response.data;
+};
+
 // Set the token for API calls
 apiService.setToken(TOKEN);
 
@@ -176,6 +188,7 @@ export {
   getEditionByNumber,
   getHomepage,
   getCategory,
+  subscribeNewsletter,
   locale,
   calculatePaginationParams,
   getPaginationInfo,
