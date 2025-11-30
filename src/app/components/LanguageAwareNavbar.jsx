@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { useRouter, usePathname } from "next/navigation";
 import { FaBars, FaSearch, FaFilePdf } from "react-icons/fa";
 import Link from "next/link";
-import { getEditions } from "../../core/repo.js";
 
 // Load Sidebar on the client only to avoid SSR hydration mismatches
 const Sidebar = dynamic(() => import("./Sidebar"), { ssr: false });
@@ -68,28 +67,37 @@ export default function LanguageAwareNavbar({
     applyLang(currentLang);
   }, [currentLang, applyLang]);
 
-  // Fetch editions on component mount
+  // Fetch editions on component mount using server-side API route
   useEffect(() => {
     const fetchEditions = async () => {
       setIsLoadingEditions(true);
       setEditionsError(null);
       try {
-        const response = await getEditions();
+        // Use server-side API route to avoid CORS and mixed content issues
+        const response = await fetch("/api/editions?page=1&pageSize=100");
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch editions: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const data = await response.json();
 
         // Handle different possible response structures from Strapi v4
         // Structure 1: { data: [...], meta: {...} } (standard Strapi format)
         // Structure 2: [...] (direct array, if API returns differently)
         let editionsData = [];
 
-        if (Array.isArray(response)) {
+        if (Array.isArray(data)) {
           // Response is already an array
-          editionsData = response;
-        } else if (response?.data && Array.isArray(response.data)) {
+          editionsData = data;
+        } else if (data?.data && Array.isArray(data.data)) {
           // Response has data property with array
-          editionsData = response.data;
-        } else if (response?.data?.data && Array.isArray(response.data.data)) {
+          editionsData = data.data;
+        } else if (data?.data?.data && Array.isArray(data.data.data)) {
           // Nested data structure
-          editionsData = response.data.data;
+          editionsData = data.data.data;
         }
 
         // Validate that we have valid edition objects with required fields
@@ -99,29 +107,27 @@ export default function LanguageAwareNavbar({
 
         if (validEditions.length > 0) {
           setEditions(validEditions);
+          setEditionsError(null); // Clear any previous errors
         } else {
           // No valid editions found, but no error - might be empty
           setEditions([]);
           if (process.env.NODE_ENV === "development") {
-            console.warn("No valid editions found in response:", response);
+            console.warn("No valid editions found in response:", data);
           }
         }
       } catch (error) {
         // Enhanced error logging for production debugging
         const errorMessage =
-          error?.response?.data?.error?.message ||
-          error?.message ||
-          "Unknown error fetching editions";
+          error?.message || "Unknown error fetching editions";
         const errorDetails = {
           message: errorMessage,
-          status: error?.response?.status,
-          statusText: error?.response?.statusText,
-          url: error?.config?.url,
+          timestamp: new Date().toISOString(),
         };
 
         console.error("Error fetching editions:", errorDetails, error);
         setEditionsError(error);
-        setEditions([]);
+        // Keep existing editions if available, don't clear them on error
+        // This allows users to still interact with the dropdown
       } finally {
         setIsLoadingEditions(false);
       }
@@ -240,20 +246,29 @@ export default function LanguageAwareNavbar({
                 className="px-3 py-2 rounded border border-black bg-white text-sm text-black"
                 aria-label={t("issueDate")}
                 defaultValue=""
-                disabled={isLoadingEditions || editionsError}
+                disabled={isLoadingEditions}
               >
                 <option disabled value="">
                   {isLoadingEditions
                     ? t("loading") || "Loading..."
-                    : editionsError
-                      ? t("error") || "Error"
+                    : editionsError && editions.length === 0
+                      ? t("error") || "Error loading editions"
                       : t("issueDate")}
                 </option>
-                {editions.map((edition) => (
-                  <option key={edition.id} value={edition.number}>
-                    {t("issue")} {edition.number} - {formatDate(edition.date)}
-                  </option>
-                ))}
+                {editions.length > 0
+                  ? editions.map((edition) => (
+                      <option key={edition.id} value={edition.number}>
+                        {t("issue")} {edition.number} -{" "}
+                        {formatDate(edition.date)}
+                      </option>
+                    ))
+                  : !isLoadingEditions && (
+                      <option disabled value="">
+                        {editionsError
+                          ? t("error") || "Error loading editions"
+                          : t("noEditions") || "No editions available"}
+                      </option>
+                    )}
               </select>
             </div>
           </div>
@@ -333,20 +348,29 @@ export default function LanguageAwareNavbar({
                 className="w-full px-3 py-2 rounded border border-black bg-white text-sm text-black"
                 aria-label={t("issueDate")}
                 defaultValue=""
-                disabled={isLoadingEditions || editionsError}
+                disabled={isLoadingEditions}
               >
                 <option disabled value="">
                   {isLoadingEditions
                     ? t("loading") || "Loading..."
-                    : editionsError
-                      ? t("error") || "Error"
+                    : editionsError && editions.length === 0
+                      ? t("error") || "Error loading editions"
                       : t("issueDate")}
                 </option>
-                {editions.map((edition) => (
-                  <option key={edition.id} value={edition.number}>
-                    {t("issue")} {edition.number} - {formatDate(edition.date)}
-                  </option>
-                ))}
+                {editions.length > 0
+                  ? editions.map((edition) => (
+                      <option key={edition.id} value={edition.number}>
+                        {t("issue")} {edition.number} -{" "}
+                        {formatDate(edition.date)}
+                      </option>
+                    ))
+                  : !isLoadingEditions && (
+                      <option disabled value="">
+                        {editionsError
+                          ? t("error") || "Error loading editions"
+                          : t("noEditions") || "No editions available"}
+                      </option>
+                    )}
               </select>
             </div>
           </div>
