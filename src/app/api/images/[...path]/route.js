@@ -4,7 +4,7 @@ const SERVER_BASE_URL = 'http://46.62.165.97:1337';
 
 export async function GET(request, { params }) {
   try {
-    const { path } = params;
+    const { path } = await params;
     
     // Reconstruct the full path from the catch-all route
     const imagePath = Array.isArray(path) ? path.join('/') : path;
@@ -40,7 +40,7 @@ export async function GET(request, { params }) {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable', // Cache for 1 year
+        'Cache-Control': 'no-store',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
         'X-XSS-Protection': '1; mode=block',

@@ -1,12 +1,5 @@
 import apiService from "./apiServices.js";
 
-// Cache configuration
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
-const CACHE_KEY_PREFIX = "kandak_cache_";
-
-// Cache storage
-const cache = new Map();
-
 // Get locale from local storage (client-side) or default (server-side)
 const getLocale = () => {
   if (typeof window !== "undefined") {
@@ -16,46 +9,6 @@ const getLocale = () => {
 };
 
 const locale = getLocale();
-
-// Cache utility functions
-const getCacheKey = (endpoint, params = {}) => {
-  const sortedParams = Object.keys(params)
-    .sort()
-    .reduce((result, key) => {
-      result[key] = params[key];
-      return result;
-    }, {});
-  return `${CACHE_KEY_PREFIX}${endpoint}_${JSON.stringify(sortedParams)}`;
-};
-
-const isCacheValid = (cacheEntry) => {
-  return cacheEntry && Date.now() - cacheEntry.timestamp < CACHE_DURATION;
-};
-
-const getFromCache = (cacheKey) => {
-  const cacheEntry = cache.get(cacheKey);
-  if (isCacheValid(cacheEntry)) {
-    console.log("Cache hit for:", cacheKey);
-    return cacheEntry.data;
-  }
-  if (cacheEntry) {
-    console.log("Cache expired for:", cacheKey);
-    cache.delete(cacheKey);
-  }
-  return null;
-};
-
-const setCache = (cacheKey, data) => {
-  cache.set(cacheKey, {
-    data,
-    timestamp: Date.now(),
-  });
-};
-
-const clearCache = () => {
-  cache.clear();
-  console.log("Cache cleared");
-};
 
 // Pagination utility functions
 const calculatePaginationParams = (page, limit) => {
@@ -137,17 +90,8 @@ const getByCategory = async (
   const populateParams = "?populate%5B0%5D=cover&populate%5B1%5D=author";
   const url = `${ARTICLES_URL}${populateParams}`;
 
-  // Try in-memory cache first (reduces repeated calls on fast navigation)
-  const cacheKey = getCacheKey(url, params);
-  const cached = getFromCache(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
   const response = await apiService.get(url, params);
-  const data = response.data;
-  setCache(cacheKey, data);
-  return data;
+  return response.data;
 };
 
 const getByAuthor = async (author, limit = null) => {
@@ -176,19 +120,12 @@ const getEditions = async (page = 1, pageSize = 100) => {
     "pagination[pageSize]": pageSize,
     "fields[0]": "number",
     "fields[1]": "date",
+    "fields[2]": "id",
     "sort[0]": "number:desc",
   };
 
-  const cacheKey = getCacheKey(EDITIONS_URL, params);
-  const cached = getFromCache(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
   const response = await apiService.get(EDITIONS_URL, params);
-  const data = response.data;
-  setCache(cacheKey, data);
-  return data;
+  return response.data;
 };
 
 const getEditionByNumber = async (number) => {
@@ -201,36 +138,30 @@ const getEditionByNumber = async (number) => {
     "?populate%5B0%5D=articles&populate%5B1%5D=articles.cover";
   const url = `${EDITIONS_URL}${populateParams}`;
 
-  const cacheKey = getCacheKey(url, params);
-  const cached = getFromCache(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
   const response = await apiService.get(url, params);
-  const data = response.data;
-  setCache(cacheKey, data);
-  return data;
+  return response.data;
 };
 
 const getHomepage = async (currentLocale = null) => {
   const localeToUse = currentLocale || getLocale();
-  const cacheKey = getCacheKey(HOME_URL, { locale: localeToUse });
+  const response = await apiService.get(HOME_URL, { locale: localeToUse });
+  return response.data;
+};
 
-  // Check cache first
-  const cachedData = getFromCache(cacheKey);
-  if (cachedData) {
-    return cachedData;
+const getCategory = async (locale = null) => {
+  const CATEGORY_URL = "api/categories";
+  const params = {};
+
+  if (locale) {
+    params.locale = locale;
   }
 
-  // Fetch from API if not in cache
-  const response = await apiService.get(HOME_URL, { locale: localeToUse });
-  const data = response.data;
+  // Add populate parameters if needed
+  const populateParams = "?populate=*";
+  const url = `${CATEGORY_URL}${populateParams}`;
 
-  // Cache the response
-  setCache(cacheKey, data);
-
-  return data;
+  const response = await apiService.get(url, params);
+  return response.data;
 };
 
 // Set the token for API calls
@@ -244,7 +175,7 @@ export {
   getEditions,
   getEditionByNumber,
   getHomepage,
-  clearCache,
+  getCategory,
   locale,
   calculatePaginationParams,
   getPaginationInfo,

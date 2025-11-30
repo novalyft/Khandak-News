@@ -63,7 +63,7 @@ export default function Sidebar({
       {
         label: t("cat.editorial"),
         icon: <FaBullhorn />,
-        path: "/article-category/editorial",
+        path: "/article-category/editorial-article",
       },
       {
         label: t("cat.israelis"),

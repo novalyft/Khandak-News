@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useTranslation } from "react-i18next";
 import { useRouter, usePathname } from "next/navigation";
@@ -13,6 +13,25 @@ const Sidebar = dynamic(() => import("./Sidebar"), { ssr: false });
 
 const langToDir = (lng) => (lng === "ar" ? "rtl" : "ltr");
 
+/**
+ * Format date from YYYY-MM-DD to DD/MM/YYYY
+ * @param {string} dateString - Date string in YYYY-MM-DD format
+ * @returns {string} Formatted date string in DD/MM/YYYY format
+ */
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  return `${day}/${month}/${year}`;
+};
+
+/**
+ * Language-aware navigation bar component with responsive design
+ * Supports desktop and mobile layouts with language switching, search, and edition selection
+ * @param {Object} props - Component props
+ * @param {Function} props.onLatestIssue - Callback when latest issue button is clicked
+ * @param {Function} props.onEditionChange - Callback when edition selection changes
+ * @param {Function} props.onSearch - Callback when search form is submitted
+ */
 export default function LanguageAwareNavbar({
   onLatestIssue = () => {},
   onEditionChange = () => {},
@@ -23,12 +42,19 @@ export default function LanguageAwareNavbar({
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [lng, setLng] = useState("ar");
   const [editions, setEditions] = useState([]);
+  const [isLoadingEditions, setIsLoadingEditions] = useState(true);
+  const [editionsError, setEditionsError] = useState(null);
 
-  // Extract current language from pathname
-  const currentLang = pathname.split("/")[1] || "ar";
+  // Memoize current language extraction from pathname
+  const currentLang = useMemo(() => {
+    return pathname.split("/")[1] || "ar";
+  }, [pathname]);
 
+  /**
+   * Apply language settings to document and storage
+   * @param {string} val - Language code (ar/en)
+   */
   const applyLang = useCallback((val) => {
     document.documentElement.setAttribute("lang", val);
     document.documentElement.setAttribute("dir", langToDir(val));
@@ -36,7 +62,6 @@ export default function LanguageAwareNavbar({
       localStorage.setItem("lang", val);
       document.cookie = `lang=${val}; path=/; max-age=${60 * 60 * 24 * 365}`;
     } catch {}
-    setLng(val);
   }, []);
 
   useEffect(() => {
@@ -46,28 +71,63 @@ export default function LanguageAwareNavbar({
   // Fetch editions on component mount
   useEffect(() => {
     const fetchEditions = async () => {
+      setIsLoadingEditions(true);
+      setEditionsError(null);
       try {
         const response = await getEditions();
-        if (response?.data) {
-          // Sort editions by number in descending order (newest first)
-          const sortedEditions = [...response.data].sort(
-            (a, b) => b.number - a.number
-          );
-          setEditions(sortedEditions);
+
+        // Handle different possible response structures from Strapi v4
+        // Structure 1: { data: [...], meta: {...} } (standard Strapi format)
+        // Structure 2: [...] (direct array, if API returns differently)
+        let editionsData = [];
+
+        if (Array.isArray(response)) {
+          // Response is already an array
+          editionsData = response;
+        } else if (response?.data && Array.isArray(response.data)) {
+          // Response has data property with array
+          editionsData = response.data;
+        } else if (response?.data?.data && Array.isArray(response.data.data)) {
+          // Nested data structure
+          editionsData = response.data.data;
+        }
+
+        // Validate that we have valid edition objects with required fields
+        const validEditions = editionsData.filter(
+          (edition) => edition && (edition.id || edition.number)
+        );
+
+        if (validEditions.length > 0) {
+          setEditions(validEditions);
+        } else {
+          // No valid editions found, but no error - might be empty
+          setEditions([]);
+          if (process.env.NODE_ENV === "development") {
+            console.warn("No valid editions found in response:", response);
+          }
         }
       } catch (error) {
-        console.error("Error fetching editions:", error);
+        // Enhanced error logging for production debugging
+        const errorMessage =
+          error?.response?.data?.error?.message ||
+          error?.message ||
+          "Unknown error fetching editions";
+        const errorDetails = {
+          message: errorMessage,
+          status: error?.response?.status,
+          statusText: error?.response?.statusText,
+          url: error?.config?.url,
+        };
+
+        console.error("Error fetching editions:", errorDetails, error);
+        setEditionsError(error);
+        setEditions([]);
+      } finally {
+        setIsLoadingEditions(false);
       }
     };
     fetchEditions();
   }, []);
-
-  // Format date from YYYY-MM-DD to DD/MM/YYYY
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const [year, month, day] = dateString.split("-");
-    return `${day}/${month}/${year}`;
-  };
 
   const switchLanguage = useCallback(() => {
     const nextLang = currentLang === "ar" ? "en" : "ar";
@@ -79,22 +139,30 @@ export default function LanguageAwareNavbar({
     router.push(`/${nextLang}${pathWithoutLang}`);
   }, [currentLang, pathname, router]);
 
-  const toggleSidebar = () => setIsSidebarOpen((o) => !o);
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    onSearch(query);
-  };
+  const handleSearchSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      onSearch(query);
+    },
+    [query, onSearch]
+  );
 
-  const handleEditionChange = (e) => {
-    const editionNumber = e.target.value;
-    if (editionNumber) {
-      // Navigate to edition page with the edition number
-      router.push(`/${currentLang}/edition/${editionNumber}`);
-    }
-    // Call the callback if provided (for backward compatibility)
-    onEditionChange(editionNumber);
-  };
+  const handleEditionChange = useCallback(
+    (e) => {
+      const editionNumber = e.target.value;
+      if (editionNumber) {
+        // Navigate to edition page with the edition number
+        router.push(`/${currentLang}/edition/${editionNumber}`);
+      }
+      // Call the callback if provided (for backward compatibility)
+      onEditionChange(editionNumber);
+    },
+    [currentLang, router, onEditionChange]
+  );
 
   return (
     <>
@@ -149,7 +217,7 @@ export default function LanguageAwareNavbar({
             </div>
 
             <div className="flex justify-center flex-1">
-              <Link href="/">
+              <Link href={`/${currentLang}`}>
                 <img
                   src="/images/logo.svg"
                   alt={t("brandAlt")}
@@ -172,9 +240,14 @@ export default function LanguageAwareNavbar({
                 className="px-3 py-2 rounded border border-black bg-white text-sm text-black"
                 aria-label={t("issueDate")}
                 defaultValue=""
+                disabled={isLoadingEditions || editionsError}
               >
                 <option disabled value="">
-                  {t("issueDate")}
+                  {isLoadingEditions
+                    ? t("loading") || "Loading..."
+                    : editionsError
+                      ? t("error") || "Error"
+                      : t("issueDate")}
                 </option>
                 {editions.map((edition) => (
                   <option key={edition.id} value={edition.number}>
@@ -205,11 +278,13 @@ export default function LanguageAwareNavbar({
               </button>
 
               <div className="absolute inset-x-0 top-3 bottom-3 pointer-events-none flex items-center justify-center">
-                <img
-                  src="/images/logo.svg"
-                  alt={t("brandAlt")}
-                  className="h-16 object-contain pointer-events-auto"
-                />
+                <Link href={`/${currentLang}`} className="pointer-events-auto">
+                  <img
+                    src="/images/logo.svg"
+                    alt={t("brandAlt")}
+                    className="h-16 object-contain"
+                  />
+                </Link>
               </div>
             </div>
 
@@ -258,9 +333,14 @@ export default function LanguageAwareNavbar({
                 className="w-full px-3 py-2 rounded border border-black bg-white text-sm text-black"
                 aria-label={t("issueDate")}
                 defaultValue=""
+                disabled={isLoadingEditions || editionsError}
               >
                 <option disabled value="">
-                  {t("issueDate")}
+                  {isLoadingEditions
+                    ? t("loading") || "Loading..."
+                    : editionsError
+                      ? t("error") || "Error"
+                      : t("issueDate")}
                 </option>
                 {editions.map((edition) => (
                   <option key={edition.id} value={edition.number}>
