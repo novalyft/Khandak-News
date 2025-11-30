@@ -170,6 +170,20 @@ export default function LanguageAwareNavbar({
     [currentLang, router, onEditionChange]
   );
 
+  const handleDownloadPdf = useCallback(() => {
+    // Check if we're on an edition page
+    const editionMatch = pathname.match(/\/edition\/(\d+)/);
+    const editionNumber = editionMatch ? editionMatch[1] : null;
+
+    // Construct API URL with optional editionNumber parameter
+    const apiUrl = editionNumber
+      ? `/api/download-pdf?editionNumber=${editionNumber}`
+      : `/api/download-pdf`;
+
+    // Open the API route which will redirect to the PDF
+    window.open(apiUrl, "_blank");
+  }, [pathname]);
+
   return (
     <>
       <header className="w-full border-b border-gray-300 bg-white">
@@ -234,7 +248,7 @@ export default function LanguageAwareNavbar({
 
             <div className="flex items-center gap-3 flex-1 justify-end">
               <button
-                onClick={onLatestIssue}
+                onClick={handleDownloadPdf}
                 className="bg-gray-200 text-black font-bold px-4 py-2 rounded inline-flex items-center gap-2"
               >
                 <FaFilePdf className="text-red-600 text-xl" aria-hidden />
@@ -305,7 +319,7 @@ export default function LanguageAwareNavbar({
 
             <div className="mt-3 flex items-center gap-2 px-1">
               <button
-                onClick={onLatestIssue}
+                onClick={handleDownloadPdf}
                 className="bg-gray-200 text-black font-bold px-4 py-2 rounded inline-flex items-center justify-center gap-2 flex-1"
               >
                 <FaFilePdf className="text-red-600 text-xl" aria-hidden />

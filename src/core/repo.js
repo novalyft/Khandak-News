@@ -135,10 +135,11 @@ const getEditionByNumber = async (number) => {
 
   // Add populate parameters for articles and their cover images
   const populateParams =
-    "?populate%5B0%5D=articles&populate%5B1%5D=articles.cover";
+    "?populate%5B0%5D=articles&populate%5B1%5D=articles.cover&populate%5B2%5D=pdf";
   const url = `${EDITIONS_URL}${populateParams}`;
 
   const response = await apiService.get(url, params);
+
   return response.data;
 };
 
