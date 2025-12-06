@@ -106,6 +106,28 @@ const getByAuthor = async (author, limit = null) => {
   return response.data;
 };
 
+const searchByTitle = async (
+  titleQuery,
+  limit = null,
+  locale = null,
+  page = 1
+) => {
+  const params = { "filters[title][$containsi]": titleQuery };
+  if (limit) params.limit = limit;
+  if (locale) params.locale = locale;
+
+  // Add pagination parameters for Strapi v4
+  params["pagination[page]"] = page;
+  params["pagination[pageSize]"] = limit || 25;
+
+  // Add populate parameters - using populate=* as requested
+  const populateParams = "?populate=*";
+  const url = `${ARTICLES_URL}${populateParams}`;
+
+  const response = await apiService.get(url, params);
+  return response.data;
+};
+
 const getArticle = async (documentId) => {
   const response = await apiService.get(
     `${ARTICLES_URL}/${documentId}?populate[0]=cover&populate[1]=author&populate[2]=author.avatar&populate[3]=articleContent&populate[5]=articleContent.image`
@@ -185,6 +207,7 @@ export {
   getArticles,
   getByCategory,
   getByAuthor,
+  searchByTitle,
   getArticle,
   getEditions,
   getEditionByNumber,

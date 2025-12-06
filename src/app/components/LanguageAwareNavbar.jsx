@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useTranslation } from "react-i18next";
 import { useRouter, usePathname } from "next/navigation";
@@ -44,6 +44,12 @@ export default function LanguageAwareNavbar({
   const [editions, setEditions] = useState([]);
   const [isLoadingEditions, setIsLoadingEditions] = useState(true);
   const [editionsError, setEditionsError] = useState(null);
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const desktopSearchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
 
   // Memoize current language extraction from pathname
   const currentLang = useMemo(() => {
@@ -149,13 +155,124 @@ export default function LanguageAwareNavbar({
     setIsSidebarOpen((prev) => !prev);
   }, []);
 
+  // Fetch search suggestions as user types
+  const fetchSearchSuggestions = useCallback(
+    async (searchQuery) => {
+      if (!searchQuery.trim() || searchQuery.length < 2) {
+        setSearchSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+
+      setIsLoadingSuggestions(true);
+      try {
+        const response = await fetch(
+          `/api/search?titleQuery=${encodeURIComponent(
+            searchQuery
+          )}&page=1&pageSize=5&locale=${currentLang}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          // Handle different possible response structures
+          let articles = [];
+          if (Array.isArray(data)) {
+            articles = data;
+          } else if (data?.data && Array.isArray(data.data)) {
+            articles = data.data;
+          } else if (data?.data?.data && Array.isArray(data.data.data)) {
+            articles = data.data.data;
+          }
+          setSearchSuggestions(articles);
+          setShowSuggestions(articles.length > 0);
+        }
+      } catch (error) {
+        console.error("Error fetching search suggestions:", error);
+        setSearchSuggestions([]);
+        setShowSuggestions(false);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    },
+    [currentLang]
+  );
+
+  // Debounced search suggestions
+  useEffect(() => {
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Set new timeout
+    searchTimeoutRef.current = setTimeout(() => {
+      fetchSearchSuggestions(query);
+    }, 300); // 300ms debounce
+
+    // Cleanup
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [query, fetchSearchSuggestions]);
+
+  // Handle clicks outside search container
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const isOutsideDesktop =
+        desktopSearchRef.current &&
+        !desktopSearchRef.current.contains(event.target);
+      const isOutsideMobile =
+        mobileSearchRef.current &&
+        !mobileSearchRef.current.contains(event.target);
+
+      if (isOutsideDesktop && isOutsideMobile) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleSearchSubmit = useCallback(
     (e) => {
       e.preventDefault();
-      onSearch(query);
+      if (query.trim()) {
+        setShowSuggestions(false);
+        // Navigate to search results page with query parameter
+        router.push(
+          `/${currentLang}/search?q=${encodeURIComponent(query.trim())}`
+        );
+      }
     },
-    [query, onSearch]
+    [query, currentLang, router]
   );
+
+  const handleSuggestionClick = useCallback(
+    (article) => {
+      setShowSuggestions(false);
+      setQuery("");
+      router.push(`/${currentLang}/article/${article.documentId}`);
+    },
+    [currentLang, router]
+  );
+
+  const handleInputChange = useCallback((e) => {
+    setQuery(e.target.value);
+    if (e.target.value.trim().length >= 2) {
+      setShowSuggestions(true);
+    }
+  }, []);
+
+  const handleInputFocus = useCallback(() => {
+    if (searchSuggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+  }, [searchSuggestions.length]);
 
   const handleEditionChange = useCallback(
     (e) => {
@@ -209,13 +326,17 @@ export default function LanguageAwareNavbar({
 
               <form
                 onSubmit={handleSearchSubmit}
-                className="flex items-center"
+                className="flex items-center relative"
                 aria-label={t("search")}
               >
-                <div className="flex items-center bg-gray-100 rounded overflow-hidden">
+                <div
+                  ref={desktopSearchRef}
+                  className="relative flex items-center bg-gray-100 rounded overflow-visible"
+                >
                   <input
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
                     type="text"
                     required
                     placeholder={t("searchPlaceholder")}
@@ -232,6 +353,51 @@ export default function LanguageAwareNavbar({
                   >
                     <FaSearch className="text-black" />
                   </button>
+                  {/* Search Suggestions Dropdown */}
+                  {showSuggestions && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
+                      {isLoadingSuggestions ? (
+                        <div className="px-4 py-3 text-gray-500 text-sm">
+                          {t("loading") || "Loading..."}
+                        </div>
+                      ) : searchSuggestions.length > 0 ? (
+                        <>
+                          {searchSuggestions.map((article) => (
+                            <button
+                              key={article.id || article.documentId}
+                              type="button"
+                              onClick={() => handleSuggestionClick(article)}
+                              className="w-full text-left px-4 py-3 hover:bg-gray-100 border-b border-gray-200 last:border-b-0 transition-colors"
+                            >
+                              <div className="font-semibold text-black text-sm mb-1 line-clamp-2">
+                                {article.title}
+                              </div>
+                              {article.createdAt && (
+                                <div className="text-xs text-gray-500">
+                                  {new Date(
+                                    article.createdAt
+                                  ).toLocaleDateString("ar-SA")}
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                          <Link
+                            href={`/${currentLang}/search?q=${encodeURIComponent(
+                              query.trim()
+                            )}`}
+                            onClick={() => setShowSuggestions(false)}
+                            className="block px-4 py-3 text-center text-sm font-semibold text-blue-600 hover:bg-gray-100 border-t border-gray-200"
+                          >
+                            {t("viewAllResults") || "View all results"} →
+                          </Link>
+                        </>
+                      ) : (
+                        <div className="px-4 py-3 text-gray-500 text-sm">
+                          {t("noResults") || "No results found"}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </form>
             </div>
@@ -328,13 +494,17 @@ export default function LanguageAwareNavbar({
 
               <form
                 onSubmit={handleSearchSubmit}
-                className="flex-1 min-w-0"
+                className="flex-1 min-w-0 relative"
                 aria-label={t("search")}
               >
-                <div className="flex items-center gap-2 bg-gray-100 rounded overflow-hidden w-full">
+                <div
+                  ref={mobileSearchRef}
+                  className="relative flex items-center gap-2 bg-gray-100 rounded overflow-visible w-full"
+                >
                   <input
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
                     name="q"
                     type="text"
                     required
@@ -352,6 +522,51 @@ export default function LanguageAwareNavbar({
                   >
                     <FaSearch className="text-black" />
                   </button>
+                  {/* Search Suggestions Dropdown */}
+                  {showSuggestions && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
+                      {isLoadingSuggestions ? (
+                        <div className="px-4 py-3 text-gray-500 text-sm">
+                          {t("loading") || "Loading..."}
+                        </div>
+                      ) : searchSuggestions.length > 0 ? (
+                        <>
+                          {searchSuggestions.map((article) => (
+                            <button
+                              key={article.id || article.documentId}
+                              type="button"
+                              onClick={() => handleSuggestionClick(article)}
+                              className="w-full text-left px-4 py-3 hover:bg-gray-100 border-b border-gray-200 last:border-b-0 transition-colors"
+                            >
+                              <div className="font-semibold text-black text-sm mb-1 line-clamp-2">
+                                {article.title}
+                              </div>
+                              {article.createdAt && (
+                                <div className="text-xs text-gray-500">
+                                  {new Date(
+                                    article.createdAt
+                                  ).toLocaleDateString("ar-SA")}
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                          <Link
+                            href={`/${currentLang}/search?q=${encodeURIComponent(
+                              query.trim()
+                            )}`}
+                            onClick={() => setShowSuggestions(false)}
+                            className="block px-4 py-3 text-center text-sm font-semibold text-blue-600 hover:bg-gray-100 border-t border-gray-200"
+                          >
+                            {t("viewAllResults") || "View all results"} →
+                          </Link>
+                        </>
+                      ) : (
+                        <div className="px-4 py-3 text-gray-500 text-sm">
+                          {t("noResults") || "No results found"}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </form>
             </div>
