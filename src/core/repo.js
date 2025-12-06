@@ -108,8 +108,9 @@ const getByAuthor = async (author, limit = null) => {
 
 const getArticle = async (documentId) => {
   const response = await apiService.get(
-    `${ARTICLES_URL}/${documentId}?populate%5B0%5D=cover&populate%5B1%5D=author&populate%5B2%5D=author.avatar`
+    `${ARTICLES_URL}/${documentId}?populate[0]=cover&populate[1]=author&populate[2]=author.avatar&populate[3]=articleContent&populate[5]=articleContent.image`
   );
+
   return response.data;
 };
 

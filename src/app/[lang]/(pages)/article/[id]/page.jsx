@@ -11,7 +11,6 @@ const ArticlePage = async ({ params }) => {
   try {
     if (params?.id) {
       articleData = await getArticle(params.id);
-      console.log("Article data:", articleData);
     }
   } catch (err) {
     console.error("Error fetching article:", err);
@@ -40,6 +39,7 @@ const ArticlePage = async ({ params }) => {
       <ArticleLayout
         title={articleData.data.title}
         content={articleData.data.content}
+        articleContent={articleData.data.articleContent}
       />
     </div>
   );

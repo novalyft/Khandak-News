@@ -31,10 +31,7 @@ const ArticleHeader = ({
       {/* Author Section */}
       {(authorName || authorImage) && (
         <a href={authorLink}>
-          <div className="absolute bottom-[10px] left-[10px] bg-black/55 rounded-[500px_150px_150px_500px] flex items-center gap-4 px-4 py-2 mb-[-50]">
-            {authorName && (
-              <p className="text-white text-lg m-0">{authorName}</p>
-            )}
+          <div className="absolute bottom-[10px] right-[10px] bg-black/55 rounded-[150px_500px_500px_150px] flex items-center gap-4 px-4 py-2 mb-[-50]">
             {authorImage && (
               <div
                 className="rounded-full w-[120px] h-[120px] bg-cover bg-center bg-no-repeat "
@@ -42,6 +39,9 @@ const ArticleHeader = ({
                   backgroundImage: `url('${authorImage}')`,
                 }}
               ></div>
+            )}
+            {authorName && (
+              <p className="text-white text-lg m-0">{authorName}</p>
             )}
           </div>
         </a>
