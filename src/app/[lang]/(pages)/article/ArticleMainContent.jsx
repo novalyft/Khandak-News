@@ -2,6 +2,7 @@
 import React from "react";
 import SocialIcons from "./SocialIcons";
 import ArticleTitle from "./ArticleTitle";
+import QuoteBreak from "./QuoteBreak";
 import { getCoverImageUrl } from "@/core/imageUtils";
 
 const ArticleMainContent = ({ title, content, articleContent }) => {
@@ -30,6 +31,9 @@ const ArticleMainContent = ({ title, content, articleContent }) => {
                     className="text-black mb-4"
                     dangerouslySetInnerHTML={{ __html: item.paragraph }}
                   />
+                )}
+                {item.quote && (
+                  <QuoteBreak text={item.quote} />
                 )}
                 {item.image && getCoverImageUrl(item.image) && (
                   <div className="my-4">
