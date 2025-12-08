@@ -40,6 +40,8 @@ const ArticlePage = async ({ params }) => {
         title={articleData.data.title}
         content={articleData.data.content}
         articleContent={articleData.data.articleContent}
+        tags={articleData.data.tags}
+        lang={params.lang || "ar"}
       />
     </div>
   );

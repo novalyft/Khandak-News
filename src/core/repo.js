@@ -147,7 +147,7 @@ const searchByTag = async (tagQuery, limit = null, locale = null, page = 1) => {
 
 const getArticle = async (documentId) => {
   const response = await apiService.get(
-    `${ARTICLES_URL}/${documentId}?populate[0]=cover&populate[1]=author&populate[2]=author.avatar&populate[3]=articleContent&populate[5]=articleContent.image`
+    `${ARTICLES_URL}/${documentId}?populate[0]=cover&populate[1]=author&populate[2]=author.avatar&populate[3]=articleContent&populate[5]=articleContent.image&populate[6]=tags`
   );
 
   return response.data;

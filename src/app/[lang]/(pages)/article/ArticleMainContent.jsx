@@ -3,9 +3,10 @@ import React from "react";
 import SocialIcons from "./SocialIcons";
 import ArticleTitle from "./ArticleTitle";
 import QuoteBreak from "./QuoteBreak";
+import ArticleTags from "./ArticleTags";
 import { getCoverImageUrl } from "@/core/imageUtils";
 
-const ArticleMainContent = ({ title, content, articleContent }) => {
+const ArticleMainContent = ({ title, content, articleContent, tags, lang }) => {
   return (
     <div className="w-full lg:w-2/3 min-w-0 pl-0 lg:pl-8 lg:border-l lg:border-gray-600">
       <ArticleTitle title={title} />
@@ -13,6 +14,8 @@ const ArticleMainContent = ({ title, content, articleContent }) => {
       <div className="mb-8">
         <SocialIcons />
       </div>
+
+      {tags && tags.length > 0 && <ArticleTags tags={tags} lang={lang} />}
 
       {/* Article Content */}
       <div className="prose prose-lg max-w-none" dir="rtl">
