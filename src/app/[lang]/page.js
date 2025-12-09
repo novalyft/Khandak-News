@@ -43,21 +43,6 @@ const categoryMapping = {
   "editorial-article": "editorial",
 };
 
-// Static data for sections (keeping infographics as they don't have API data yet)
-
-const infographicItems = [
-  {
-    title: "سياسة الإفقار في لبنان",
-    image:
-      "https://al-khandak.com/storage/infographics/December2021/AGwhl2yOpIzZOhA3qeCJ.jpg",
-  },
-  {
-    title: "سياسة الإفقار في لبنان",
-    image:
-      "https://al-khandak.com/storage/infographics/December2021/4BoFHmALwHqx0xdMjxDa.jpg",
-  },
-];
-
 export default async function Home({ params }) {
   const { lang } = params;
 
@@ -70,7 +55,7 @@ export default async function Home({ params }) {
   const opinionData = homepageData?.data?.opinion;
   const cultureAndPhilosophyData = homepageData?.data?.cultureAndPhilosophy;
   const africaAndSportData = homepageData?.data?.africaAndSport;
-  // Debug logging
+  const infographData = homepageData?.data?.infograpic;
 
   // Transform API data to match component expectations
   const transformPostData = (posts) => {
@@ -113,7 +98,18 @@ export default async function Home({ params }) {
     );
   };
 
+  // Transform infograph data to match component expectations
+  const transformInfographData = (infographs) => {
+    return (
+      infographs?.map((infograph) => ({
+        title: infograph.title,
+        image: getCoverImageUrl(infograph.coverImage) || "",
+      })) || []
+    );
+  };
+
   const videosFromAPI = transformVideoData(videoData);
+  const infographsFromAPI = transformInfographData(infographData?.infographs);
 
   return (
     <main className="bg-white">
@@ -140,7 +136,7 @@ export default async function Home({ params }) {
         rightPosts={israelisPostsFromAPI}
       />
 
-      <InfographicsSection items={infographicItems} />
+      <InfographicsSection items={infographsFromAPI} />
 
       <LocalNewsSection
         leftTitleKey="sections.cultureMedia"
@@ -151,7 +147,7 @@ export default async function Home({ params }) {
         rightPosts={philosophyPostsFromAPI}
       />
 
-      <InfographicsSection items={infographicItems} />
+      <InfographicsSection items={infographsFromAPI} />
 
       <LocalNewsSection
         leftTitleKey="sections.africa"
