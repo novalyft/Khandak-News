@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getCategory } from '@/core/repo';
 
+// Revalidate every 2 minutes
+export const revalidate = 120;
+
 export async function GET(request) {
   try {
     // Get locale from query parameters (optional)

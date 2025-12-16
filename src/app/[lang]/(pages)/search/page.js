@@ -4,6 +4,9 @@ import Link from "next/link";
 import { getPaginationInfo } from "@/core/repo";
 import ArticlesGrid from "../article-category/ArticlesGrid";
 
+// Revalidate every 2 minutes
+export const revalidate = 120;
+
 const SearchPage = async ({ params, searchParams }) => {
   const lang = params.lang || "ar";
   const query = searchParams.q || "";
@@ -42,7 +45,7 @@ const SearchPage = async ({ params, searchParams }) => {
       query
     )}&page=${currentPage}&pageSize=${limit}&locale=${lang}`;
     const response = await fetch(apiUrl, {
-      cache: "no-store", // Always fetch fresh results for search
+      next: { revalidate: 120 }, // Revalidate every 2 minutes
     });
 
     if (!response.ok) {

@@ -4,6 +4,9 @@ import { getCoverImageUrl, getAvatarImageUrl } from "@/core/imageUtils";
 import ArticleHeader from "../ArticleHeader";
 import ArticleLayout from "../ArticleLayout";
 
+// Revalidate every 2 minutes
+export const revalidate = 120;
+
 const ArticlePage = async ({ params }) => {
   let articleData = null;
   let error = null;

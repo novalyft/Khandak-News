@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Revalidate every 2 minutes
+export const revalidate = 120;
+
 const SERVER_BASE_URL = 'http://46.62.165.97:1337';
 
 export async function GET(request, { params }) {
@@ -23,6 +26,7 @@ export async function GET(request, { params }) {
       headers: {
         'User-Agent': 'Kandak-News-Image-Proxy/1.0',
       },
+      next: { revalidate: 120 }, // Revalidate every 2 minutes
     });
     
     if (!response.ok) {

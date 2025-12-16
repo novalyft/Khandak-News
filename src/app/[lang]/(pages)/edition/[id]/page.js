@@ -3,6 +3,9 @@ import { getEditionByNumber } from "@/core/repo";
 import CategoryHeader from "../CategoryHeader";
 import ArticlesGrid from "../ArticlesGrid";
 
+// Revalidate every 2 minutes
+export const revalidate = 120;
+
 const EditionPage = async ({ params, searchParams }) => {
   const editionNumber = params.id;
   const lang = params.lang || "ar";

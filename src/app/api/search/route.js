@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Revalidate every 2 minutes
+export const revalidate = 120;
+
 const SERVER_BASE_URL = 'http://46.62.165.97:1337';
 const TOKEN = `Bearer 68aa8e860b375ed203796e994c90c4738eafe79765177a490e21940b71e23ceb8c1ee45036d2051d82816b719cd0592c6746b338a5335f056af588a73f3a4b3b7ee0d89902bdc923831d56f878abf3384c3da8272ae692b3ff8c415281107925052a92c6405234dfeeed79ff3160fe663aeda341aa08aae5e761b5f647277d6c`;
 const ARTICLES_URL = 'api/articles';
@@ -44,6 +47,7 @@ export async function GET(request) {
         'Content-Type': 'application/json',
         'User-Agent': 'Kandak-News-Search-Proxy/1.0',
       },
+      next: { revalidate: 120 }, // Revalidate every 2 minutes
     });
 
     if (!response.ok) {

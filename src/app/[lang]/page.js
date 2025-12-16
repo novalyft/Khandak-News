@@ -3,6 +3,9 @@ import IntegratedHeroSection from "../components/IntegratedHeroSection";
 import { getHomepage } from "../../core/repo";
 import { getCoverImageUrl } from "../../core/imageUtils";
 
+// Revalidate every 2 minutes
+export const revalidate = 120;
+
 // Dynamic imports for better performance - these components are not immediately visible
 const LocalNewsSection = dynamic(
   () => import("../components/LocalNewsSection"),

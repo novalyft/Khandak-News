@@ -4,6 +4,9 @@ import CategoryHeader from "../CategoryHeader";
 import ArticlesGrid from "../ArticlesGrid";
 import Pagination from "../Pagination";
 
+// Revalidate every 2 minutes
+export const revalidate = 120;
+
 const ArticleTagsPage = async ({ params, searchParams }) => {
   const tagId = params.id;
   const lang = params.lang || "ar";
