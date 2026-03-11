@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { getCoverImageUrl } from "../../core/imageUtils";
 
 export default function IntegratedHeroSection({ bannerData }) {
   const { t } = useTranslation("common");
+  const { lang } = useParams();
   const [mounted, setMounted] = useState(false);
   const [dir, setDir] = useState("rtl");
   const [selectedArticleIndex, setSelectedArticleIndex] = useState(0);
@@ -64,7 +66,7 @@ export default function IntegratedHeroSection({ bannerData }) {
                   {featuredArticle.description}
                 </p>
                 <Link
-                  href={`/article/${featuredArticle.slug}`}
+                  href={`/${lang}/article/${featuredArticle.documentId}`}
                   className="text-white underline hover:text-gray-200 text-sm"
                 >
                   {t("hero.readMore")}
@@ -78,7 +80,7 @@ export default function IntegratedHeroSection({ bannerData }) {
                   )}
                 </p>
                 <Link
-                  href="/article"
+                  href={`/${lang}/article`}
                   className="text-white underline hover:text-gray-200 text-sm"
                 >
                   {t("hero.readMore")}
