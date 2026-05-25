@@ -12,7 +12,12 @@
   "newsletter": {
     "title": "Want to subscribe to our newsletter?",
     "emailPlaceholder": "Email address",
-    "subscribe": "Subscribe"
+    "subscribe": "Subscribe",
+    "subscribing": "Subscribing...",
+    "success": "Successfully subscribed!",
+    "errorRequired": "Please enter your email address",
+    "errorInvalid": "Please enter a valid email address",
+    "errorFailed": "Failed to subscribe to newsletter"
   },
   "home": "Home",
   "cat": {
@@ -36,6 +41,13 @@
     "body": "The scandal of the rape of a Palestinian prisoner at the end of last July ignited Israeli society after the soldiers accused of rape and torture were arrested.",
     "readMore": "Read more"
   },
+  "loading": "Loading...",
+  "error": "Error loading editions",
+  "noArticles": "No articles available",
+  "noFolders": "No folders available at the moment",
+  "viewAllResults": "View all results",
+  "noResults": "No results found",
+  "noEditions": "No editions available",
   "close": "Close",
   "title": "Infographics",
   "viewMore": "View more",
@@ -45,6 +57,9 @@
     "viewMore": "View more",
     "openAria": "Open infographic: {{title}}"
   },
+  "authorCard": {
+    "relatedPosts": "Related Posts"
+  },
   "sections": {
     "locals": "Local",
     "international": "International Affairs",
@@ -53,6 +68,8 @@
     "cultureMedia": "Culture & Media",
     "philosophy": "Philosophy",
     "africa": "Africa",
-    "sports": "Sports"
+    "sports": "Sports",
+    "economy": "Economy",
+    "editorial": "Editorial"
   }
 }

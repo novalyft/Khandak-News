@@ -4,12 +4,6 @@ import { useTranslation } from "react-i18next";
 
 export default function Africa() {
   const { t, ready, i18n } = useTranslation("common");
-  if (!ready) return null;
-
-  // Only the title translates
-  const title = t("cat.africa", {
-    defaultValue: i18n.language?.startsWith("en") ? "Africa" : "افريقيا",
-  });
 
   const posts = [
     {
@@ -47,8 +41,14 @@ export default function Africa() {
     return posts.slice(start, start + perPage);
   }, [page, perPage, posts]);
 
+  const title = t("cat.africa", {
+    defaultValue: i18n.language?.startsWith("en") ? "Africa" : "افريقيا",
+  });
+
   const goPrev = () => setPage((p) => Math.max(1, p - 1));
   const goNext = () => setPage((p) => Math.min(totalPages, p + 1));
+
+  if (!ready) return null;
 
   return (
     <div className="container mx-auto px-4 pb-[70px]">

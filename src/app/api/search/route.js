@@ -36,8 +36,8 @@ export async function GET(request) {
       params.append('locale', locale);
     }
 
-    // Construct the full URL to the server with populate=*
-    const serverUrl = `${SERVER_BASE_URL}/${ARTICLES_URL}?populate=*&${params.toString()}`;
+    // Construct the full URL to the server with explicit populate for edition date
+    const serverUrl = `${SERVER_BASE_URL}/${ARTICLES_URL}?populate[0]=cover&populate[1]=edition&${params.toString()}`;
 
     // Fetch articles from the server
     const response = await fetch(serverUrl, {

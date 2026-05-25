@@ -13,7 +13,7 @@ const categoryTranslations = {
     ar: "محليات",
     en: "Local News",
   },
-  "culture-media": {
+  "culture-and-media": {
     ar: "ثقافة وميديا",
     en: "Culture & Media",
   },
@@ -49,6 +49,10 @@ const categoryTranslations = {
     ar: "افتتاحية",
     en: "Editorial",
   },
+  "editorial-article": {
+    ar: "افتتاحية",
+    en: "Editorial",
+  },
 };
 
 const ArticleCategoryPage = async ({ params, searchParams }) => {
@@ -73,9 +77,11 @@ const ArticleCategoryPage = async ({ params, searchParams }) => {
       <div className="container mx-auto px-4 pb-[70px]">
         <div className="text-center py-8">
           <h1 className="text-2xl font-bold text-red-600 mb-4">
-            Error loading articles
+            {lang === "en" ? "Error loading articles" : "خطأ في تحميل المقالات"}
           </h1>
-          <p className="text-gray-600">Please try again later.</p>
+          <p className="text-gray-600">
+            {lang === "en" ? "Please try again later." : "يرجى المحاولة مرة أخرى لاحقاً."}
+          </p>
         </div>
       </div>
     );
@@ -86,10 +92,10 @@ const ArticleCategoryPage = async ({ params, searchParams }) => {
       <div className="container mx-auto px-4 pb-[70px]">
         <div className="text-center py-8">
           <h1 className="text-2xl font-bold text-gray-600 mb-4">
-            No articles found
+            {lang === "en" ? "No articles found" : "لا توجد مقالات"}
           </h1>
           <p className="text-gray-500">
-            No articles available for this category.
+            {lang === "en" ? "No articles available for this category." : "لا توجد مقالات متاحة لهذه الفئة."}
           </p>
         </div>
       </div>

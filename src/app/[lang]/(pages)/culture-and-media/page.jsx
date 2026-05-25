@@ -147,10 +147,10 @@ export default function CultureMediaSection() {
                     <i className="fas fa-clock text-xs"></i>
                     {post.date}
                   </p>
-                  <p className="flex items-center gap-1">
+                  {/* <p className="flex items-center gap-1">
                     <i className="fas fa-newspaper text-xs"></i>
                     {post.views}
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>

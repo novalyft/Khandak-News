@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import IntegratedHeroSection from "../components/IntegratedHeroSection";
-import { getHomepage } from "../../core/repo";
+import { getHomepage, getByCategory } from "../../core/repo";
 import { getCoverImageUrl } from "../../core/imageUtils";
 
 // Revalidate every 2 minutes
@@ -38,19 +38,24 @@ const categoryMapping = {
   "international-affairs": "international-affairs",
   opinion: "opinion",
   "israeli-occupation": "israeli-occupation",
-  "culture-and-media": "culture-media",
+  "culture-and-media": "culture-and-media",
   philosophy: "philosophy",
   africa: "africa",
   sports: "sports",
   economy: "economy",
-  "editorial-article": "editorial",
+  editorial: "editorial-article",
+  "editorial-article": "editorial-article",
 };
 
 export default async function Home({ params }) {
-  const { lang } = params;
+  const { lang } = await params;
 
-  // Fetch homepage data with the current language
-  const homepageData = await getHomepage(lang);
+  // Fetch homepage data and category data in parallel
+  const [homepageData, economyData, editorialData] = await Promise.all([
+    getHomepage(lang),
+    getByCategory("economy", 4, lang),
+    getByCategory("editorial", 4, lang),
+  ]);
   const bannerData = homepageData?.data?.banner;
   const localAndInternationalData =
     homepageData?.data?.localandinternationalaffairs;
@@ -65,9 +70,9 @@ export default async function Home({ params }) {
     return (
       posts?.map((post) => ({
         title: post.title,
-        date:
-          post.datePublished ||
-          new Date(post.publishedAt).toLocaleDateString("en-GB"),
+        date: post.edition?.date
+          ? new Date(post.edition.date).toLocaleDateString("en-GB")
+          : "",
         views: "0", // API doesn't provide view count
         image: getCoverImageUrl(post.cover) || "",
         url: `/${lang}/article/${post.documentId}`,
@@ -89,15 +94,20 @@ export default async function Home({ params }) {
   );
   const africaPostsFromAPI = transformPostData(africaAndSportData?.africas);
   const sportsPostsFromAPI = transformPostData(africaAndSportData?.sports);
+  const economyPostsFromAPI = transformPostData(economyData?.data);
+  const editorialPostsFromAPI = transformPostData(editorialData?.data);
 
   // Transform video data to match component expectations
   const transformVideoData = (videos) => {
+    const seen = new Set();
     return (
-      videos?.map((video) => ({
-        id: video.videolink,
-        title_ar: video.title,
-        date: video.date,
-      })) || []
+      videos?.reduce((acc, video) => {
+        if (video.videolink && !seen.has(video.videolink)) {
+          seen.add(video.videolink);
+          acc.push({ id: video.videolink, title_ar: video.title, date: video.date });
+        }
+        return acc;
+      }, []) || []
     );
   };
 
@@ -127,6 +137,14 @@ export default async function Home({ params }) {
         rightHref={`/${lang}/article-category/${categoryMapping["international-affairs"]}`}
         rightPosts={internationalPostsFromAPI}
       />
+      <LocalNewsSection
+        leftTitleKey="sections.economy"
+        leftHref={`/${lang}/article-category/${categoryMapping["economy"]}`}
+        leftPosts={economyPostsFromAPI}
+        rightTitleKey="sections.editorial"
+        rightHref={`/${lang}/article-category/${categoryMapping["editorial"]}`}
+        rightPosts={editorialPostsFromAPI}
+      />
 
       <VideoSection items={videosFromAPI} />
 
@@ -150,7 +168,6 @@ export default async function Home({ params }) {
         rightPosts={philosophyPostsFromAPI}
       />
 
-      <InfographicsSection items={infographsFromAPI} />
 
       <LocalNewsSection
         leftTitleKey="sections.africa"

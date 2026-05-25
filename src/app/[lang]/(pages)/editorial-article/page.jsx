@@ -109,7 +109,7 @@ export default function EditorialArticleGrid() {
                           d="M19 21H5a2 2 0 01-2-2V7a2 2 0 012-2h4l2-2h6l2 2h4a2 2 0 012 2v12a2 2 0 01-2 2z"
                         />
                       </svg>
-                      <span>{item.views}</span>
+                      {/* <span>{item.views}</span> */}
                     </div>
                   </div>
                 </div>

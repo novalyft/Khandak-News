@@ -52,9 +52,12 @@ const EditionPage = async ({ params, searchParams }) => {
   // Get the first edition from the response
   const edition = editionData.data[0];
 
-  // Extract articles from the edition
-  // The articles might be in edition.articles or similar structure
-  const articles = edition?.articles || edition?.data?.articles || [];
+  // Extract articles from the edition and inject edition date for display
+  const rawArticles = edition?.articles || edition?.data?.articles || [];
+  const articles = rawArticles.map((a) => ({
+    ...a,
+    edition: { date: edition.date },
+  }));
   // Get edition title
   const editionTitle = edition?.title
     ? `${edition.title} - ${lang === "ar" ? "العدد" : "Edition"} ${edition.number || editionNumber}`

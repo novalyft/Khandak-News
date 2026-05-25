@@ -43,6 +43,7 @@ const mapCategoryToAPI = (categoryId) => {
     sports: "sports",
     economy: "economy",
     editorial: "editorial",
+    "editorial-article": "editorial",
   };
 
   return categoryMap[categoryId] || categoryId;
@@ -52,7 +53,7 @@ const TOKEN = `Bearer 68aa8e860b375ed203796e994c90c4738eafe79765177a490e21940b71
 
 const ARTICLES_URL = "api/articles";
 const EDITIONS_URL = "api/editions";
-const HOME_URL = `api/homepage?populate[0]=banner&populate[1]=banner.articles&populate[2]=banner.articles.cover&populate[3]=video&populate[4]=infograpic.infographs&populate[5]=infograph2.infographs&populate[6]=localandinternationalaffairs&populate[7]=localandinternationalaffairs.local&populate[8]=localandinternationalaffairs.local.cover&populate[9]=localandinternationalaffairs.internations&populate[10]=localandinternationalaffairs.internations.cover&populate[11]=opinion&populate[12]=opinion.opinions&populate[13]=opinion.israelis&populate[14]=cultureAndPhilosophy&populate[15]=cultureAndPhilosophy.cultures&populate[16]=cultureAndPhilosophy.cultures.cover&populate[17]=cultureAndPhilosophy.philosophies&populate[18]=cultureAndPhilosophy.philosophies.cover&populate[19]=africaAndSport&populate[20]=africaAndSport.africas&populate[21]=africaAndSport.africas.cover&populate[22]=africaAndSport.sports&populate[23]=africaAndSport.sports.cover&populate[24]=infograpic.infographs.coverImage&populate[25]=infograph2.infographs.coverImage`;
+const HOME_URL = `api/homepage?populate[0]=banner&populate[1]=banner.articles&populate[2]=banner.articles.cover&populate[3]=video&populate[4]=infograpic.infographs&populate[5]=infograph2.infographs&populate[6]=localandinternationalaffairs&populate[7]=localandinternationalaffairs.local&populate[8]=localandinternationalaffairs.local.cover&populate[9]=localandinternationalaffairs.internations&populate[10]=localandinternationalaffairs.internations.cover&populate[11]=opinion&populate[12]=opinion.opinions&populate[13]=opinion.israelis&populate[14]=cultureAndPhilosophy&populate[15]=cultureAndPhilosophy.cultures&populate[16]=cultureAndPhilosophy.cultures.cover&populate[17]=cultureAndPhilosophy.philosophies&populate[18]=cultureAndPhilosophy.philosophies.cover&populate[19]=africaAndSport&populate[20]=africaAndSport.africas&populate[21]=africaAndSport.africas.cover&populate[22]=africaAndSport.sports&populate[23]=africaAndSport.sports.cover&populate[24]=infograpic.infographs.coverImage&populate[25]=infograph2.infographs.coverImage&populate[26]=banner.articles.edition&populate[27]=localandinternationalaffairs.local.edition&populate[28]=localandinternationalaffairs.internations.edition&populate[29]=opinion.opinions.edition&populate[30]=opinion.israelis.edition&populate[31]=cultureAndPhilosophy.cultures.edition&populate[32]=cultureAndPhilosophy.philosophies.edition&populate[33]=africaAndSport.africas.edition&populate[34]=africaAndSport.sports.edition`;
 
 const getArticles = async (limit = null, page = 1) => {
   const params = {};
@@ -98,8 +99,8 @@ const getByAuthor = async (author, limit = null) => {
   const params = { author };
   if (limit) params.limit = limit;
 
-  // Add populate parameters for cover and author
-  const populateParams = "?populate%5B0%5D=cover&populate%5B1%5D=author";
+  // Add populate parameters for cover, author, and edition
+  const populateParams = "?populate%5B0%5D=cover&populate%5B1%5D=author&populate%5B2%5D=edition";
   const url = `${ARTICLES_URL}${populateParams}`;
 
   const response = await apiService.get(url, params);
@@ -137,8 +138,8 @@ const searchByTag = async (tagQuery, limit = null, locale = null, page = 1) => {
   params["pagination[page]"] = page;
   params["pagination[pageSize]"] = limit || 25;
 
-  // Add populate parameters for tags, cover, and author
-  const populateParams = "?populate=tags,cover,author";
+  // Add populate parameters for tags, cover, author, and edition
+  const populateParams = "?populate=tags,cover,author,edition";
   const url = `${ARTICLES_URL}${populateParams}`;
 
   const response = await apiService.get(url, params);

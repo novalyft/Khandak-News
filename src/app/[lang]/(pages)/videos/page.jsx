@@ -24,14 +24,16 @@ const videos = [
     thumb: "https://img.youtube.com/vi/9Wx-9-ucnnw/hqdefault.jpg",
     height: "h-[80px]",
   },
-  // {
-  //   id: "_iiXBbZ5FfM",
-  //   title: "سليماني بعيونهم الجزء 1",
-  //   url: "https://www.youtube.com/watch?v=_iiXBbZ5FfM",
-  //   thumb: "https://img.youtube.com/vi/_iiXBbZ5FfM/hqdefault.jpg",
-  //   height: "h-[px]",
-  // },
+  {
+    id: "_iiXBbZ5FfM",
+    title: "سليماني بعيونهم الجزء 1",
+    url: "https://www.youtube.com/watch?v=_iiXBbZ5FfM",
+    thumb: "https://img.youtube.com/vi/_iiXBbZ5FfM/hqdefault.jpg",
+    height: "h-[80px]",
+  },
 ];
+
+
 
 export default function VideoGallery() {
   const { t, ready, i18n } = useTranslation("common");
@@ -58,13 +60,16 @@ export default function VideoGallery() {
             >
               <i className="fas fa-play text-khandaq-orange text-5xl"></i>
             </div>
-            <div className="text-لامشؤن mt-2">{videos[0].title}</div>
+            <div className="text-لامشؤن" style={{color: "black", marginTop: "20px"}}>
+                <p>{videos[0].title}</p>
+                <p className="text-sm">20/07/2021</p>
+              </div>
           </a>
         </div>
 
         {/* Right column with two videos */}
         <div className="lg:w-1/2 w-full flex flex-col gap-4">
-          {[videos[1], videos[2]].map((video) => (
+          {videos.slice(1, 4).map((video) => (
             <a
               key={video.id}
               href={video.url}
@@ -85,29 +90,6 @@ export default function VideoGallery() {
             </a>
           ))}
         </div>
-      </div>
-
-      {/* Bottom row with one video */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-5">
-        {videos.slice(3, 4).map((video) => (
-          <a
-            key={video.id}
-            href={video.url}
-            target="_blank"
-            rel="noreferrer"
-            className="cursor-pointer"
-          >
-            <div className="p-2">
-              <div
-                className={`rounded bg-center bg-cover ${video.height} flex justify-center items-center`}
-                style={{ backgroundImage: `url(${video.thumb})` }}
-              >
-                <i className="fas fa-play text-khandaq-orange text-4xl"></i>
-              </div>
-              <p className="text-لامشؤن mt-3">{video.title}</p>
-            </div>
-          </a>
-        ))}
       </div>
     </div>
   );

@@ -3,10 +3,13 @@
 import React, { useState } from "react";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 
 export default function Footer() {
   const { t } = useTranslation("common");
+  const pathname = usePathname();
+  const lang = pathname.split("/")[1] || "ar";
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -34,7 +37,7 @@ export default function Footer() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Failed to subscribe to newsletter");
+        setError(data.error || t("newsletter.errorFailed"));
       } else {
         setSuccess(true);
         setEmail(""); // Clear the email field on success
@@ -43,14 +46,14 @@ export default function Footer() {
       }
     } catch (err) {
       console.error("Error subscribing to newsletter:", err);
-      setError(err.message || "Failed to subscribe to newsletter");
+      setError(err.message || t("newsletter.errorFailed"));
     } finally {
       setLoading(false);
     }
   };
 
   const categories = [
-    [t("cat.editorial"), "article-category/editorial"],
+    [t("cat.editorial"), "article-category/editorial-article"],
     [t("cat.israelis"), "article-category/israeli-occupation"],
     [t("cat.international"), "article-category/international-affairs"],
     [t("cat.africa"), "article-category/africa"],
@@ -58,13 +61,12 @@ export default function Footer() {
     [t("cat.opinion"), "article-category/opinion"],
     [t("cat.economy"), "article-category/economy"],
     [t("cat.philosophy"), "article-category/philosophy"],
-    [t("cat.cultureMedia"), "article-category/culture-media"],
+    [t("cat.cultureMedia"), "article-category/culture-and-media"],
     [t("cat.sports"), "article-category/sports"],
     [t("cat.folders"), "folders"],
     [t("cat.videos"), "videos"],
     [t("cat.infographics"), "infographics"],
     [t("cat.privacy"), "privacy-policy"],
-    [t("cat.contact"), "contact-us"],
   ];
 
   return (
@@ -80,6 +82,13 @@ export default function Footer() {
                 name="subscribe-email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onInvalid={(e) => {
+                  const msg = e.target.validity.valueMissing
+                    ? t("newsletter.errorRequired")
+                    : t("newsletter.errorInvalid");
+                  e.target.setCustomValidity(msg);
+                }}
+                onInput={(e) => e.target.setCustomValidity("")}
                 placeholder={t("newsletter.emailPlaceholder")}
                 required
                 disabled={loading}
@@ -92,9 +101,7 @@ export default function Footer() {
                 disabled={loading}
               >
                 <PaperAirplaneIcon className="w-5 h-5 -rotate-45 group-hover:translate-x-1 transition-transform" />
-                {loading
-                  ? t("newsletter.subscribing") || "Subscribing..."
-                  : t("newsletter.subscribe")}
+                {loading ? t("newsletter.subscribing") : t("newsletter.subscribe")}
               </button>
             </form>
 
@@ -102,7 +109,7 @@ export default function Footer() {
 
             {success && (
               <p className="mt-2 text-sm text-green-600">
-                {t("newsletter.success") || "Successfully subscribed!"}
+                {t("newsletter.success")}
               </p>
             )}
           </div>
@@ -129,7 +136,7 @@ export default function Footer() {
                 {group.map(([label, path]) => (
                   <li key={path}>
                     <Link
-                      href={`/${path}`}
+                      href={`/${lang}/${path}`}
                       className="text-gray-800 hover:text-red-600 transition-colors duration-200 cursor-pointer font-bold"
                     >
                       {label}

@@ -12,7 +12,12 @@
   "newsletter": {
     "title": "هل تريد الاشتراك في نشرتنا الإخبارية؟",
     "emailPlaceholder": "البريد الإلكتروني",
-    "subscribe": "اشتراك"
+    "subscribe": "اشتراك",
+    "subscribing": "جاري الاشتراك...",
+    "success": "تم الاشتراك بنجاح!",
+    "errorRequired": "يرجى إدخال البريد الإلكتروني",
+    "errorInvalid": "يرجى إدخال بريد إلكتروني صحيح",
+    "errorFailed": "فشل الاشتراك في النشرة الإخبارية"
   },
   "home": "الرئيسية",
   "cat": {
@@ -36,18 +41,23 @@
      "body": "أججت فضيحة اغتصاب أسير فلسطيني نهاية شهر يوليو/تموز العام الماضي مجتمع \"اسرائيل\" بعد اعتقال الجنود المتهمين بجريمة الاغتصاب والتعذيب",
     "readMore": "قراءة المزيد"
   },
+  "loading": "جاري التحميل...",
+  "error": "خطأ في تحميل الأعداد",
+  "noArticles": "لا توجد مقالات متاحة",
+  "noFolders": "لا توجد ملفات متاحة حالياً",
+  "viewAllResults": "عرض جميع النتائج",
+  "noResults": "لا توجد نتائج",
+  "noEditions": "لا توجد أعداد متاحة",
   "close": "إغلاق",
   "infographicsSection": {
     "title": "إنفوغرافيك",
     "viewMore": "مشاهدة المزيد",
     "openAria": "عرض الإنفوغرافيك: {{title}}"
   },
-   "infographicsSection": {
-    "title": "إنفوغرافيك",
-    "viewMore": "مشاهدة المزيد",
-    "openAria": "عرض الإنفوغرافيك: {{title}}"
-  }  
-  , "sections": {
+  "authorCard": {
+    "relatedPosts": "مقالات ذات صلة"
+  },
+  "sections": {
     "locals": "محليات",
     "international": "عربي ودولي",
     "opinion": "رأي",
@@ -55,6 +65,8 @@
     "cultureMedia": "ثقافة وميديا",
     "philosophy": "فلسفة",
     "africa": "افريقيا",
-    "sports": "رياضة"
+    "sports": "رياضة",
+    "economy": "اقتصاد",
+    "editorial": "افتتاحية"
   }
 }

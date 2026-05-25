@@ -55,7 +55,7 @@ export default function HeroSection({ bannerData }) {
                 {featuredArticle.description}
               </p>
               <Link
-                href={`/article/${featuredArticle.slug}`}
+                href={`/article/${featuredArticle.documentId}`}
                 className="text-white underline hover:text-gray-200 text-sm"
               >
                 {t("hero.readMore")}

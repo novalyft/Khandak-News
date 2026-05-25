@@ -11,7 +11,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const { lang } = params;
+  const { lang } = await params;
 
   const metadata = {
     ar: {

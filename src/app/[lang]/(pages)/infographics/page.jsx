@@ -149,7 +149,7 @@ export default function Infographics() {
 
       {!loading && !error && infographics.length > 0 && (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
             {infographics.map((infograph) => (
               <a
                 href={infograph.url || infograph.image}
@@ -161,7 +161,7 @@ export default function Infographics() {
                 <img
                   src={infograph.url || infograph.image}
                   alt={infograph.title}
-                  className="w-full h-[380px] object-cover"
+                  className="w-full h-[380px] object-contain"
                   loading="lazy"
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">

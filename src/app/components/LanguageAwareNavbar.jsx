@@ -47,6 +47,7 @@ export default function LanguageAwareNavbar({
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [pdfError, setPdfError] = useState(false);
   const desktopSearchRef = useRef(null);
   const mobileSearchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
@@ -287,18 +288,25 @@ export default function LanguageAwareNavbar({
     [currentLang, router, onEditionChange]
   );
 
-  const handleDownloadPdf = useCallback(() => {
-    // Check if we're on an edition page
+  const handleDownloadPdf = useCallback(async () => {
     const editionMatch = pathname.match(/\/edition\/(\d+)/);
     const editionNumber = editionMatch ? editionMatch[1] : null;
-
-    // Construct API URL with optional editionNumber parameter
     const apiUrl = editionNumber
       ? `/api/download-pdf?editionNumber=${editionNumber}`
       : `/api/download-pdf`;
 
-    // Open the API route which will redirect to the PDF
-    window.open(apiUrl, "_blank");
+    try {
+      const response = await fetch(apiUrl, { redirect: "manual" });
+      if (response.type === "opaqueredirect") {
+        window.open(apiUrl, "_blank");
+      } else {
+        setPdfError(true);
+        setTimeout(() => setPdfError(false), 4000);
+      }
+    } catch {
+      setPdfError(true);
+      setTimeout(() => setPdfError(false), 4000);
+    }
   }, [pathname]);
 
   return (
@@ -355,10 +363,13 @@ export default function LanguageAwareNavbar({
                   </button>
                   {/* Search Suggestions Dropdown */}
                   {showSuggestions && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
+                    <div
+                      dir={currentLang === "ar" ? "rtl" : "ltr"}
+                      className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto"
+                    >
                       {isLoadingSuggestions ? (
                         <div className="px-4 py-3 text-gray-500 text-sm">
-                          {t("loading") || "Loading..."}
+                          {t("loading")}
                         </div>
                       ) : searchSuggestions.length > 0 ? (
                         <>
@@ -367,16 +378,14 @@ export default function LanguageAwareNavbar({
                               key={article.id || article.documentId}
                               type="button"
                               onClick={() => handleSuggestionClick(article)}
-                              className="w-full text-left px-4 py-3 hover:bg-gray-100 border-b border-gray-200 last:border-b-0 transition-colors"
+                              className={`w-full ${currentLang === "ar" ? "text-right" : "text-left"} px-4 py-3 hover:bg-gray-100 border-b border-gray-200 last:border-b-0 transition-colors`}
                             >
                               <div className="font-semibold text-black text-sm mb-1 line-clamp-2">
                                 {article.title}
                               </div>
-                              {article.createdAt && (
+                              {article.edition?.date && (
                                 <div className="text-xs text-gray-500">
-                                  {new Date(
-                                    article.createdAt
-                                  ).toLocaleDateString("ar-SA")}
+                                  {formatDate(article.edition.date)}
                                 </div>
                               )}
                             </button>
@@ -388,12 +397,12 @@ export default function LanguageAwareNavbar({
                             onClick={() => setShowSuggestions(false)}
                             className="block px-4 py-3 text-center text-sm font-semibold text-blue-600 hover:bg-gray-100 border-t border-gray-200"
                           >
-                            {t("viewAllResults") || "View all results"} →
+                            {t("viewAllResults")} {currentLang === "ar" ? "←" : "→"}
                           </Link>
                         </>
                       ) : (
                         <div className="px-4 py-3 text-gray-500 text-sm">
-                          {t("noResults") || "No results found"}
+                          {t("noResults")}
                         </div>
                       )}
                     </div>
@@ -413,13 +422,20 @@ export default function LanguageAwareNavbar({
             </div>
 
             <div className="flex items-center gap-3 flex-1 justify-end">
-              <button
-                onClick={handleDownloadPdf}
-                className="bg-gray-200 text-black font-bold px-4 py-2 rounded inline-flex items-center gap-2"
-              >
-                <FaFilePdf className="text-red-600 text-xl" aria-hidden />
-                <span>{t("downloadIssue")}</span>
-              </button>
+              <div className="relative">
+                <button
+                  onClick={handleDownloadPdf}
+                  className="bg-gray-200 text-black font-bold px-4 py-2 rounded inline-flex items-center gap-2"
+                >
+                  <FaFilePdf className="text-red-600 text-xl" aria-hidden />
+                  <span>{t("downloadIssue")}</span>
+                </button>
+                {pdfError && (
+                  <div className="absolute top-full mt-1 right-0 bg-red-50 border border-red-300 text-red-700 text-xs px-3 py-2 rounded shadow whitespace-nowrap z-50">
+                    {currentLang === "ar" ? "لا يوجد PDF لهذا العدد" : "No PDF available for this edition"}
+                  </div>
+                )}
+              </div>
 
               <select
                 onChange={handleEditionChange}
@@ -484,13 +500,20 @@ export default function LanguageAwareNavbar({
             </div>
 
             <div className="mt-3 flex items-center gap-2 px-1">
-              <button
-                onClick={handleDownloadPdf}
-                className="bg-gray-200 text-black font-bold px-4 py-2 rounded inline-flex items-center justify-center gap-2 flex-1"
-              >
-                <FaFilePdf className="text-red-600 text-xl" aria-hidden />
-                <span>{t("downloadIssue")}</span>
-              </button>
+              <div className="relative flex-1">
+                <button
+                  onClick={handleDownloadPdf}
+                  className="w-full bg-gray-200 text-black font-bold px-4 py-2 rounded inline-flex items-center justify-center gap-2"
+                >
+                  <FaFilePdf className="text-red-600 text-xl" aria-hidden />
+                  <span>{t("downloadIssue")}</span>
+                </button>
+                {pdfError && (
+                  <div className="absolute top-full mt-1 left-0 right-0 bg-red-50 border border-red-300 text-red-700 text-xs px-3 py-2 rounded shadow z-50 text-center">
+                    {currentLang === "ar" ? "لا يوجد PDF لهذا العدد" : "No PDF available for this edition"}
+                  </div>
+                )}
+              </div>
 
               <form
                 onSubmit={handleSearchSubmit}
@@ -524,10 +547,13 @@ export default function LanguageAwareNavbar({
                   </button>
                   {/* Search Suggestions Dropdown */}
                   {showSuggestions && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
+                    <div
+                      dir={currentLang === "ar" ? "rtl" : "ltr"}
+                      className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto"
+                    >
                       {isLoadingSuggestions ? (
                         <div className="px-4 py-3 text-gray-500 text-sm">
-                          {t("loading") || "Loading..."}
+                          {t("loading")}
                         </div>
                       ) : searchSuggestions.length > 0 ? (
                         <>
@@ -536,16 +562,14 @@ export default function LanguageAwareNavbar({
                               key={article.id || article.documentId}
                               type="button"
                               onClick={() => handleSuggestionClick(article)}
-                              className="w-full text-left px-4 py-3 hover:bg-gray-100 border-b border-gray-200 last:border-b-0 transition-colors"
+                              className={`w-full ${currentLang === "ar" ? "text-right" : "text-left"} px-4 py-3 hover:bg-gray-100 border-b border-gray-200 last:border-b-0 transition-colors`}
                             >
                               <div className="font-semibold text-black text-sm mb-1 line-clamp-2">
                                 {article.title}
                               </div>
-                              {article.createdAt && (
+                              {article.edition?.date && (
                                 <div className="text-xs text-gray-500">
-                                  {new Date(
-                                    article.createdAt
-                                  ).toLocaleDateString("ar-SA")}
+                                  {formatDate(article.edition.date)}
                                 </div>
                               )}
                             </button>
@@ -557,12 +581,12 @@ export default function LanguageAwareNavbar({
                             onClick={() => setShowSuggestions(false)}
                             className="block px-4 py-3 text-center text-sm font-semibold text-blue-600 hover:bg-gray-100 border-t border-gray-200"
                           >
-                            {t("viewAllResults") || "View all results"} →
+                            {t("viewAllResults")} {currentLang === "ar" ? "←" : "→"}
                           </Link>
                         </>
                       ) : (
                         <div className="px-4 py-3 text-gray-500 text-sm">
-                          {t("noResults") || "No results found"}
+                          {t("noResults")}
                         </div>
                       )}
                     </div>

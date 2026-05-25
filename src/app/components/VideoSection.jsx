@@ -84,7 +84,7 @@ export default function VideoSection({ items = [] }) {
                 key={video.id}
                 type="button"
                 onClick={() => setActiveVideo(video.id)}
-                className={`text-left flex gap-4 p-3 cursor-pointer rounded-md transition duration-200 ${
+                className={`flex gap-4 p-3 cursor-pointer rounded-md transition duration-200 ${
                   activeVideo === video.id ? "bg-[#333]" : "hover:bg-[#2c2c2c]"
                 }`}
                 aria-current={activeVideo === video.id ? "true" : "false"}
@@ -96,7 +96,7 @@ export default function VideoSection({ items = [] }) {
                   }}
                   aria-hidden="true"
                 />
-                <div className="flex-1 text-white text-sm">
+                <div className={`flex-1 text-white text-sm ${dir === "rtl" ? "text-right" : "text-left"}`}>
                   <p className="font-semibold line-clamp-2">
                     {pick(video, "title") || (lang === "en" ? "Untitled" : "بدون عنوان")}
                   </p>

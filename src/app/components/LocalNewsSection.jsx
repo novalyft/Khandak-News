@@ -65,10 +65,10 @@ export default function LocalNewsSection({
                         <CalendarDays size={14} />
                         {post.date}
                       </span>
-                      <span className="flex items-center gap-1">
+                      {/* <span className="flex items-center gap-1">
                         <Newspaper size={14} />
                         {post.views}
-                      </span>
+                      </span> */}
                     </div>
                   </div>
                 </div>
@@ -104,10 +104,10 @@ export default function LocalNewsSection({
                         <CalendarDays size={14} />
                         {post.date}
                       </span>
-                      <span className="flex items-center gap-1">
+                      {/* <span className="flex items-center gap-1">
                         <Newspaper size={14} />
                         {post.views}
-                      </span>
+                      </span> */}
                     </div>
                   </div>
                 </div>

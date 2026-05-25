@@ -91,7 +91,7 @@ export default function InfographicsSection({ items = [] }) {
                   <img
                     src={imgSrc}
                     alt={title}
-                    className="w-full h-[380px] object-cover"
+                    className="w-full h-[380px] object-contain"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex items-end p-4">

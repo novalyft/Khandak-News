@@ -1,3 +1,6 @@
+"use client";
+import { useTranslation } from "react-i18next";
+
 const posts = [
   {
     id: 1,
@@ -57,9 +60,12 @@ function PostCard({ imageUrl, title, date, newsCount }) {
 }
 
 export default function PostsList() {
+  const { t } = useTranslation("common");
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-4 text-red-600 text-start">Related Posts</h1>
+      <h1 className="text-3xl font-bold mb-4 text-red-600 text-start">
+        {t("authorCard.relatedPosts")}
+      </h1>
 
       {posts.map(({ id, imageUrl, title, date, newsCount }) => (
         <PostCard

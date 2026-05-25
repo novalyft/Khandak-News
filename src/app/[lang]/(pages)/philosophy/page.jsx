@@ -53,10 +53,10 @@ export default function PhilosophySection() {
                     <i className="fas fa-clock text-xs" />
                     {post.date}
                   </p>
-                  <p className="flex items-center gap-1">
+                  {/* <p className="flex items-center gap-1">
                     <i className="fas fa-newspaper text-xs" />
                     {post.views}
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>

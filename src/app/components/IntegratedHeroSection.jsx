@@ -115,9 +115,7 @@ export default function IntegratedHeroSection({ bannerData }) {
           ))
         ) : (
           <div className="w-full p-4 text-center text-gray-500">
-            <p>No articles available</p>
-            <p>Banner data: {bannerData ? "Present" : "Missing"}</p>
-            <p>Articles count: {articles.length}</p>
+            <p>{t("noArticles")}</p>
           </div>
         )}
       </div>

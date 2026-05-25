@@ -30,7 +30,6 @@ const ArticleHeader = ({
 
       {/* Author Section */}
       {(authorName || authorImage) && (
-        <a href={authorLink}>
           <div className="absolute bottom-[10px] right-[10px] bg-black/55 rounded-[150px_500px_500px_150px] flex items-center gap-4 px-4 py-2 mb-[-50]">
             {authorImage && (
               <div
@@ -44,7 +43,6 @@ const ArticleHeader = ({
               <p className="text-white text-lg m-0">{authorName}</p>
             )}
           </div>
-        </a>
       )}
     </div>
   );

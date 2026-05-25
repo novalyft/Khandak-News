@@ -103,7 +103,7 @@ export default function Sidebar({
       {
         label: t("cat.cultureMedia"),
         icon: <FaTheaterMasks />,
-        path: "/article-category/culture-media",
+        path: "/article-category/culture-and-media",
       },
       {
         label: t("cat.sports"),
