@@ -1,5 +1,5 @@
 import React from "react";
-import { searchByTag, getPaginationInfo } from "@/core/repo";
+import { getAllByTag, getPaginationInfo } from "@/core/repo";
 import CategoryHeader from "../CategoryHeader";
 import ArticlesGrid from "../ArticlesGrid";
 import Pagination from "../Pagination";
@@ -8,18 +8,28 @@ import Pagination from "../Pagination";
 export const revalidate = 120;
 
 const ArticleTagsPage = async ({ params, searchParams }) => {
-  const tagId = params.id;
-  const lang = params.lang || "ar";
-  const currentPage = parseInt(searchParams.page) || 1;
+  const { id: tagId, lang = "ar" } = await params;
+  const { page: pageParam } = await searchParams;
+  const currentPage = parseInt(pageParam) || 1;
   const limit = 12; // Articles per page
 
   let articlesData = null;
   let error = null;
 
+  const isArabic = (text = '') => /[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]/.test(text);
+
   try {
-    // Fetch articles by tag with pagination
-    // The tagId could be a tag ID or tagName, searchByTag uses tagName for searching
-    articlesData = await searchByTag(tagId, limit, lang, currentPage);
+    const all = await getAllByTag(tagId, lang);
+    const filtered = all.filter((post) =>
+      lang === 'ar' ? isArabic(post.title) : !isArabic(post.title)
+    );
+    const total = filtered.length;
+    const pageCount = Math.ceil(total / limit) || 1;
+    const start = (currentPage - 1) * limit;
+    articlesData = {
+      data: filtered.slice(start, start + limit),
+      meta: { pagination: { total, pageCount, page: currentPage, pageSize: limit } },
+    };
   } catch (err) {
     console.error("Error fetching articles by tag:", err);
     error = err;

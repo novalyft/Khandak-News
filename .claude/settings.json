@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del \"c:\\\\Users\\\\LENOVO\\\\Khandak-News\\\\src\\\\app\\\\api\\\\debug-locale\\\\route.js\")"
+    ]
+  }
+}

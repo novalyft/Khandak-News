@@ -8,9 +8,9 @@ import ArticlesGrid from "../article-category/ArticlesGrid";
 export const revalidate = 120;
 
 const SearchPage = async ({ params, searchParams }) => {
-  const lang = params.lang || "ar";
-  const query = searchParams.q || "";
-  const currentPage = parseInt(searchParams.page) || 1;
+  const { lang = "ar" } = await params;
+  const { q: query = "", page: pageParam } = await searchParams;
+  const currentPage = parseInt(pageParam) || 1;
   const limit = 12; // Articles per page
 
   let articlesData = null;
@@ -91,6 +91,11 @@ const SearchPage = async ({ params, searchParams }) => {
     articles = articlesData.data.data;
     paginationMeta = articlesData.data.meta?.pagination;
   }
+
+  const isArabic = (text = '') => /[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]/.test(text);
+  articles = articles.filter((post) =>
+    lang === 'ar' ? isArabic(post.title) : !isArabic(post.title)
+  );
 
   if (!articles || articles.length === 0) {
     return (

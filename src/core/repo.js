@@ -95,6 +95,67 @@ const getByCategory = async (
   return response.data;
 };
 
+const getAllByCategory = async (category, locale = null) => {
+  const apiCategory = mapCategoryToAPI(category);
+  const populateParams = "?populate%5B0%5D=cover&populate%5B1%5D=author";
+  const url = `${ARTICLES_URL}${populateParams}`;
+  const PAGE_SIZE = 100;
+
+  const fetchPage = async (page) => {
+    const params = {
+      "filters[category][slug][$eq]": apiCategory,
+      "pagination[page]": page,
+      "pagination[pageSize]": PAGE_SIZE,
+    };
+    if (locale) params.locale = locale;
+    const response = await apiService.get(url, params);
+    return response.data;
+  };
+
+  const first = await fetchPage(1);
+  const pageCount = first?.meta?.pagination?.pageCount || 1;
+  let allData = first?.data || [];
+
+  if (pageCount > 1) {
+    const rest = await Promise.all(
+      Array.from({ length: pageCount - 1 }, (_, i) => fetchPage(i + 2))
+    );
+    rest.forEach((r) => { allData = allData.concat(r?.data || []); });
+  }
+
+  return allData;
+};
+
+const getAllByTag = async (tag, locale = null) => {
+  const populateParams = "?populate=tags,cover,author";
+  const url = `${ARTICLES_URL}${populateParams}`;
+  const PAGE_SIZE = 100;
+
+  const fetchPage = async (page) => {
+    const params = {
+      "filters[tags][tagName][$containsi]": tag,
+      "pagination[page]": page,
+      "pagination[pageSize]": PAGE_SIZE,
+    };
+    if (locale) params.locale = locale;
+    const response = await apiService.get(url, params);
+    return response.data;
+  };
+
+  const first = await fetchPage(1);
+  const pageCount = first?.meta?.pagination?.pageCount || 1;
+  let allData = first?.data || [];
+
+  if (pageCount > 1) {
+    const rest = await Promise.all(
+      Array.from({ length: pageCount - 1 }, (_, i) => fetchPage(i + 2))
+    );
+    rest.forEach((r) => { allData = allData.concat(r?.data || []); });
+  }
+
+  return allData;
+};
+
 const getByAuthor = async (author, limit = null) => {
   const params = { author };
   if (limit) params.limit = limit;
@@ -224,6 +285,8 @@ apiService.setToken(TOKEN);
 export {
   getArticles,
   getByCategory,
+  getAllByCategory,
+  getAllByTag,
   getByAuthor,
   searchByTitle,
   searchByTag,

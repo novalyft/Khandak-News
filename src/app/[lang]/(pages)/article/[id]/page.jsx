@@ -8,12 +8,13 @@ import ArticleLayout from "../ArticleLayout";
 export const revalidate = 120;
 
 const ArticlePage = async ({ params }) => {
+  const { id, lang = "ar" } = await params;
   let articleData = null;
   let error = null;
 
   try {
-    if (params?.id) {
-      articleData = await getArticle(params.id);
+    if (id) {
+      articleData = await getArticle(id);
     }
   } catch (err) {
     console.error("Error fetching article:", err);
@@ -44,7 +45,7 @@ const ArticlePage = async ({ params }) => {
         content={articleData.data.content}
         articleContent={articleData.data.articleContent}
         tags={articleData.data.tags}
-        lang={params.lang || "ar"}
+        lang={lang}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import React from "react";
-import { getByCategory, getPaginationInfo } from "@/core/repo";
+import { getAllByCategory, getPaginationInfo } from "@/core/repo";
 import CategoryHeader from "../CategoryHeader";
 import ArticlesGrid from "../ArticlesGrid";
 import Pagination from "../Pagination";
@@ -56,17 +56,28 @@ const categoryTranslations = {
 };
 
 const ArticleCategoryPage = async ({ params, searchParams }) => {
-  const categoryId = params.id;
-  const lang = params.lang || "ar";
-  const currentPage = parseInt(searchParams.page) || 1;
+  const { id: categoryId, lang = "ar" } = await params;
+  const { page: pageParam } = await searchParams;
+  const currentPage = parseInt(pageParam) || 1;
   const limit = 12; // Articles per page
 
   let articlesData = null;
   let error = null;
 
+  const isArabic = (text = '') => /[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]/.test(text);
+
   try {
-    // Fetch articles by category with pagination
-    articlesData = await getByCategory(categoryId, limit, lang, currentPage);
+    const all = await getAllByCategory(categoryId, lang);
+    const filtered = all.filter((post) =>
+      lang === 'ar' ? isArabic(post.title) : !isArabic(post.title)
+    );
+    const total = filtered.length;
+    const pageCount = Math.ceil(total / limit) || 1;
+    const start = (currentPage - 1) * limit;
+    articlesData = {
+      data: filtered.slice(start, start + limit),
+      meta: { pagination: { total, pageCount, page: currentPage, pageSize: limit } },
+    };
   } catch (err) {
     console.error("Error fetching articles:", err);
     error = err;

@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import IntegratedHeroSection from "../components/IntegratedHeroSection";
-import { getHomepage, getByCategory } from "../../core/repo";
+import { getHomepage, getAllByCategory } from "../../core/repo";
 import { getCoverImageUrl } from "../../core/imageUtils";
 
 // Revalidate every 2 minutes
@@ -25,13 +25,6 @@ const VideoSection = dynamic(() => import("../components/VideoSection"), {
   loading: () => <div className="animate-pulse bg-gray-200 h-96 rounded" />,
 });
 
-const LatestIssueButton = dynamic(
-  () => import("../components/LatestIssueButton"),
-  {
-    loading: () => null, // Don't show loading for this small component
-  }
-);
-
 // Category mapping for URL-friendly IDs (using English category names)
 const categoryMapping = {
   mhlyat: "mhlyat",
@@ -50,52 +43,61 @@ const categoryMapping = {
 export default async function Home({ params }) {
   const { lang } = await params;
 
-  // Fetch homepage data and category data in parallel
-  const [homepageData, economyData, editorialData] = await Promise.all([
+  // Fetch all data in parallel
+  const [
+    homepageData,
+    localsRaw, internationalRaw, opinionRaw, israelisRaw,
+    cultureRaw, philosophyRaw, africaRaw, sportsRaw,
+    economyRaw, editorialRaw,
+  ] = await Promise.all([
     getHomepage(lang),
-    getByCategory("economy", 4, lang),
-    getByCategory("editorial", 4, lang),
+    getAllByCategory("mhlyat", lang),
+    getAllByCategory("international-affairs", lang),
+    getAllByCategory("opinion", lang),
+    getAllByCategory("israeli-occupation", lang),
+    getAllByCategory("culture-and-media", lang),
+    getAllByCategory("philosophy", lang),
+    getAllByCategory("africa", lang),
+    getAllByCategory("sports", lang),
+    getAllByCategory("economy", lang),
+    getAllByCategory("editorial", lang),
   ]);
   const bannerData = homepageData?.data?.banner;
-  const localAndInternationalData =
-    homepageData?.data?.localandinternationalaffairs;
   const videoData = homepageData?.data?.video;
-  const opinionData = homepageData?.data?.opinion;
-  const cultureAndPhilosophyData = homepageData?.data?.cultureAndPhilosophy;
-  const africaAndSportData = homepageData?.data?.africaAndSport;
   const infographData = homepageData?.data?.infograpic;
+
+  const isArabic = (text = '') => /[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]/.test(text);
+  const matchesLang = (post) =>
+    lang === 'ar' ? isArabic(post.title) : !isArabic(post.title);
 
   // Transform API data to match component expectations
   const transformPostData = (posts) => {
     return (
-      posts?.map((post) => ({
-        title: post.title,
-        date: post.edition?.date
-          ? new Date(post.edition.date).toLocaleDateString("en-GB")
-          : "",
-        views: "0", // API doesn't provide view count
-        image: getCoverImageUrl(post.cover) || "",
-        url: `/${lang}/article/${post.documentId}`,
-      })) || []
+      posts
+        ?.filter(matchesLang)
+        ?.map((post) => ({
+          title: post.title,
+          date: post.edition?.date
+            ? new Date(post.edition.date).toLocaleDateString("en-GB")
+            : "",
+          views: "0",
+          image: getCoverImageUrl(post.cover) || "",
+          url: `/${lang}/article/${post.documentId}`,
+        })) || []
     );
   };
 
-  const localPostsFromAPI = transformPostData(localAndInternationalData?.local);
-  const internationalPostsFromAPI = transformPostData(
-    localAndInternationalData?.internations
-  );
-  const opinionPostsFromAPI = transformPostData(opinionData?.opinions);
-  const israelisPostsFromAPI = transformPostData(opinionData?.israelis);
-  const culturePostsFromAPI = transformPostData(
-    cultureAndPhilosophyData?.cultures
-  );
-  const philosophyPostsFromAPI = transformPostData(
-    cultureAndPhilosophyData?.philosophies
-  );
-  const africaPostsFromAPI = transformPostData(africaAndSportData?.africas);
-  const sportsPostsFromAPI = transformPostData(africaAndSportData?.sports);
-  const economyPostsFromAPI = transformPostData(economyData?.data);
-  const editorialPostsFromAPI = transformPostData(editorialData?.data);
+  const take4 = (arr) => arr.slice(0, 4);
+  const localPostsFromAPI = take4(transformPostData(localsRaw));
+  const internationalPostsFromAPI = take4(transformPostData(internationalRaw));
+  const opinionPostsFromAPI = take4(transformPostData(opinionRaw));
+  const israelisPostsFromAPI = take4(transformPostData(israelisRaw));
+  const culturePostsFromAPI = take4(transformPostData(cultureRaw));
+  const philosophyPostsFromAPI = take4(transformPostData(philosophyRaw));
+  const africaPostsFromAPI = take4(transformPostData(africaRaw));
+  const sportsPostsFromAPI = take4(transformPostData(sportsRaw));
+  const economyPostsFromAPI = take4(transformPostData(economyRaw));
+  const editorialPostsFromAPI = take4(transformPostData(editorialRaw));
 
   // Transform video data to match component expectations
   const transformVideoData = (videos) => {

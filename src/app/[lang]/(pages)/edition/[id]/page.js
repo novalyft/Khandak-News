@@ -7,8 +7,7 @@ import ArticlesGrid from "../ArticlesGrid";
 export const revalidate = 120;
 
 const EditionPage = async ({ params, searchParams }) => {
-  const editionNumber = params.id;
-  const lang = params.lang || "ar";
+  const { id: editionNumber, lang = "ar" } = await params;
 
   let editionData = null;
   let error = null;
