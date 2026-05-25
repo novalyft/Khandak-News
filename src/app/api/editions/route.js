@@ -22,6 +22,7 @@ export async function GET(request) {
       'fields[1]': 'date',
       'fields[2]': 'id',
       'sort[0]': 'number:desc',
+      'populate[0]': 'pdf',
     });
 
     // Construct the full URL to the server

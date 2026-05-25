@@ -48,6 +48,7 @@ export default function LanguageAwareNavbar({
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [pdfError, setPdfError] = useState(false);
+  const [hasPdf, setHasPdf] = useState(false);
   const desktopSearchRef = useRef(null);
   const mobileSearchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
@@ -141,6 +142,18 @@ export default function LanguageAwareNavbar({
     };
     fetchEditions();
   }, []);
+
+  // Update hasPdf whenever pathname or editions list changes
+  useEffect(() => {
+    if (!editions.length) return;
+    const editionMatch = pathname.match(/\/edition\/(\d+)/);
+    const editionNumber = editionMatch ? parseInt(editionMatch[1], 10) : null;
+    const edition = editionNumber
+      ? editions.find((e) => e.number === editionNumber)
+      : editions[0]; // latest
+    const pdf = edition?.pdf;
+    setHasPdf(!!(pdf && (typeof pdf === "string" ? pdf : pdf.url || pdf.data?.url)));
+  }, [pathname, editions]);
 
   const switchLanguage = useCallback(() => {
     const nextLang = currentLang === "ar" ? "en" : "ar";
@@ -296,13 +309,21 @@ export default function LanguageAwareNavbar({
       : `/api/download-pdf`;
 
     try {
-      const response = await fetch(apiUrl, { redirect: "manual" });
-      if (response.type === "opaqueredirect") {
-        window.open(apiUrl, "_blank");
-      } else {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
         setPdfError(true);
         setTimeout(() => setPdfError(false), 4000);
+        return;
       }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = editionNumber ? `edition-${editionNumber}.pdf` : "edition-latest.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
     } catch {
       setPdfError(true);
       setTimeout(() => setPdfError(false), 4000);
@@ -425,7 +446,8 @@ export default function LanguageAwareNavbar({
               <div className="relative">
                 <button
                   onClick={handleDownloadPdf}
-                  className="bg-gray-200 text-black font-bold px-4 py-2 rounded inline-flex items-center gap-2"
+                  disabled={!hasPdf}
+                  className="bg-gray-200 text-black font-bold px-4 py-2 rounded inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <FaFilePdf className="text-red-600 text-xl" aria-hidden />
                   <span>{t("downloadIssue")}</span>
@@ -503,7 +525,8 @@ export default function LanguageAwareNavbar({
               <div className="relative flex-1">
                 <button
                   onClick={handleDownloadPdf}
-                  className="w-full bg-gray-200 text-black font-bold px-4 py-2 rounded inline-flex items-center justify-center gap-2"
+                  disabled={!hasPdf}
+                  className="w-full bg-gray-200 text-black font-bold px-4 py-2 rounded inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <FaFilePdf className="text-red-600 text-xl" aria-hidden />
                   <span>{t("downloadIssue")}</span>
