@@ -21,9 +21,7 @@ const ArticleCard = ({ article, index, lang = "ar" }) => {
           <div className="flex items-center text-gray-300 text-sm space-x-4 rtl:space-x-reverse">
             <p className="flex items-center gap-1">
               <i className="fas fa-clock text-xs"></i>
-              {article.edition?.date
-                ? new Date(article.edition.date).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB")
-                : ""}
+              {new Date(article.edition?.date || article.createdAt).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB")}
             </p>
             {/* <p className="flex items-center gap-1">
               <i className="fas fa-newspaper text-xs"></i>

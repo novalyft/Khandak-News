@@ -42,8 +42,8 @@ const mapCategoryToAPI = (categoryId) => {
     africa: "africa",
     sports: "sports",
     economy: "economy",
-    editorial: "editorial",
-    "editorial-article": "editorial",
+    editorial: "editorial-article",
+    "editorial-article": "editorial-article",
   };
 
   return categoryMap[categoryId] || categoryId;
@@ -97,7 +97,7 @@ const getByCategory = async (
 
 const getAllByCategory = async (category, locale = null) => {
   const apiCategory = mapCategoryToAPI(category);
-  const populateParams = "?populate%5B0%5D=cover&populate%5B1%5D=author";
+  const populateParams = "?populate%5B0%5D=cover&populate%5B1%5D=author&populate%5B2%5D=edition";
   const url = `${ARTICLES_URL}${populateParams}`;
   const PAGE_SIZE = 100;
 

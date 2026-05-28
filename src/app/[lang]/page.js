@@ -50,7 +50,7 @@ export default async function Home({ params }) {
     cultureRaw, philosophyRaw, africaRaw, sportsRaw,
     economyRaw, editorialRaw,
   ] = await Promise.all([
-    getHomepage(lang),
+    getHomepage('ar'),
     getAllByCategory("mhlyat", lang),
     getAllByCategory("international-affairs", lang),
     getAllByCategory("opinion", lang),
@@ -60,7 +60,7 @@ export default async function Home({ params }) {
     getAllByCategory("africa", lang),
     getAllByCategory("sports", lang),
     getAllByCategory("economy", lang),
-    getAllByCategory("editorial", lang),
+    getAllByCategory("editorial-article", lang),
   ]);
   const bannerData = homepageData?.data?.banner;
   const videoData = homepageData?.data?.video;
@@ -72,19 +72,14 @@ export default async function Home({ params }) {
 
   // Transform API data to match component expectations
   const transformPostData = (posts) => {
-    return (
-      posts
-        ?.filter(matchesLang)
-        ?.map((post) => ({
-          title: post.title,
-          date: post.edition?.date
-            ? new Date(post.edition.date).toLocaleDateString("en-GB")
-            : "",
-          views: "0",
-          image: getCoverImageUrl(post.cover) || "",
-          url: `/${lang}/article/${post.documentId}`,
-        })) || []
-    );
+    const filtered = posts?.filter(matchesLang) || [];
+    return filtered.map((post) => ({
+      title: post.title,
+      date: new Date(post.edition?.date || post.createdAt).toLocaleDateString("en-GB"),
+      views: "0",
+      image: getCoverImageUrl(post.cover) || "",
+      url: `/${lang}/article/${post.documentId}`,
+    }));
   };
 
   const take4 = (arr) => arr.slice(0, 4);

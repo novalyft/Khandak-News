@@ -34,10 +34,8 @@ export default function Footer() {
         }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        setError(data.error || t("newsletter.errorFailed"));
+        setError(t("newsletter.errorFailed"));
       } else {
         setSuccess(true);
         setEmail(""); // Clear the email field on success
@@ -46,7 +44,7 @@ export default function Footer() {
       }
     } catch (err) {
       console.error("Error subscribing to newsletter:", err);
-      setError(err.message || t("newsletter.errorFailed"));
+      setError(t("newsletter.errorFailed"));
     } finally {
       setLoading(false);
     }
@@ -88,7 +86,14 @@ export default function Footer() {
                     : t("newsletter.errorInvalid");
                   e.target.setCustomValidity(msg);
                 }}
-                onInput={(e) => e.target.setCustomValidity("")}
+                onInput={(e) => {
+                  e.target.setCustomValidity("");
+                  if (e.target.validity.valueMissing) {
+                    e.target.setCustomValidity(t("newsletter.errorRequired"));
+                  } else if (e.target.validity.typeMismatch) {
+                    e.target.setCustomValidity(t("newsletter.errorInvalid"));
+                  }
+                }}
                 placeholder={t("newsletter.emailPlaceholder")}
                 required
                 disabled={loading}
