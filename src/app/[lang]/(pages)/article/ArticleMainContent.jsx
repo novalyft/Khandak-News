@@ -1,10 +1,17 @@
 "use client";
 import React from "react";
+import { marked } from "marked";
 import SocialIcons from "./SocialIcons";
 import ArticleTitle from "./ArticleTitle";
 import QuoteBreak from "./QuoteBreak";
 import ArticleTags from "./ArticleTags";
 import { getCoverImageUrl } from "@/core/imageUtils";
+
+// Article content may be authored as Markdown (Strapi rich-text editor) or as
+// raw HTML (legacy/imported articles). marked converts Markdown to HTML and
+// passes existing HTML through untouched, so both render correctly.
+const renderRich = (text = "") =>
+  marked.parse(text || "", { async: false, gfm: true, breaks: true });
 
 const ArticleMainContent = ({ title, content, articleContent, tags, lang }) => {
   return (
@@ -26,7 +33,7 @@ const ArticleMainContent = ({ title, content, articleContent, tags, lang }) => {
       {/* Article Content */}
       <div className="prose prose-lg max-w-none" dir={lang === "ar" ? "rtl" : "ltr"}>
         <div
-          dangerouslySetInnerHTML={{ __html: content }}
+          dangerouslySetInnerHTML={{ __html: renderRich(content) }}
           className="article-content text-black"
         />
         
@@ -38,7 +45,7 @@ const ArticleMainContent = ({ title, content, articleContent, tags, lang }) => {
                 {item.paragraph && (
                   <div
                     className="text-black mb-4"
-                    dangerouslySetInnerHTML={{ __html: item.paragraph }}
+                    dangerouslySetInnerHTML={{ __html: renderRich(item.paragraph) }}
                   />
                 )}
                 {item.quote && (
