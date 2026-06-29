@@ -1,45 +1,62 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-
-const videos = [
-  {
-    id: "b-RMgVZiXkc",
-    title: "سليماني بعيونهم - الجزء 2",
-    url: "https://www.youtube.com/watch?v=b-RMgVZiXkc",
-    thumb: "https://img.youtube.com/vi/b-RMgVZiXkc/hqdefault.jpg",
-    height: "h-[350px]",
-  },
-  {
-    id: "DP11ZlNPGRg",
-    title: "الأزمة الاقتصادية العالمية وأزمة 2008 هل يعيد التاريخ نفسه ؟",
-    url: "https://www.youtube.com/watch?v=DP11ZlNPGRg",
-    thumb: "https://img.youtube.com/vi/DP11ZlNPGRg/hqdefault.jpg",
-    height: "h-[80px]",
-  },
-  {
-    id: "9Wx-9-ucnnw",
-    title: "من المسؤول عما وصلت إليه الليرة اليوم؟",
-    url: "https://www.youtube.com/watch?v=9Wx-9-ucnnw",
-    thumb: "https://img.youtube.com/vi/9Wx-9-ucnnw/hqdefault.jpg",
-    height: "h-[80px]",
-  },
-  {
-    id: "_iiXBbZ5FfM",
-    title: "سليماني بعيونهم الجزء 1",
-    url: "https://www.youtube.com/watch?v=_iiXBbZ5FfM",
-    thumb: "https://img.youtube.com/vi/_iiXBbZ5FfM/hqdefault.jpg",
-    height: "h-[80px]",
-  },
-];
-
-
+import { useParams } from "next/navigation";
 
 export default function VideoGallery() {
   const { t, ready, i18n } = useTranslation("common");
+  const params = useParams();
+  const lang = params?.lang || (i18n.language?.startsWith("en") ? "en" : "ar");
+
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeVideo, setActiveVideo] = useState("");
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/videos?locale=${lang}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch videos: ${response.status}`);
+        }
+        const data = await response.json();
+
+        // Dedup by youtube id and map to display shape
+        const seen = new Set();
+        const list = (data.data || []).reduce((acc, video) => {
+          if (video.videolink && !seen.has(video.videolink)) {
+            seen.add(video.videolink);
+            acc.push({
+              id: video.videolink,
+              title: video.title,
+              date: video.date,
+              url: `https://www.youtube.com/watch?v=${video.videolink}`,
+              thumb: `https://img.youtube.com/vi/${video.videolink}/hqdefault.jpg`,
+            });
+          }
+          return acc;
+        }, []);
+
+        setVideos(list);
+        setActiveVideo(list[0]?.id || "");
+      } catch (err) {
+        console.error("Error fetching videos:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (ready) {
+      fetchVideos();
+    }
+  }, [lang, ready]);
+
   if (!ready) return null;
 
-  // Only the page title translates
   const title = t("cat.videos", {
     defaultValue: i18n.language?.startsWith("en") ? "Videos" : "فيديو",
   });
@@ -50,47 +67,80 @@ export default function VideoGallery() {
         {title}
       </h1>
 
-      <div className="flex flex-col lg:flex-row mt-5 gap-6">
-        {/* Left big video */}
-        <div className="lg:w-1/2 w-full">
-          <a href={videos[0].url} target="_blank" rel="noreferrer" className="block cursor-pointer">
-            <div
-              className={`relative rounded overflow-hidden flex justify-center items-center bg-center bg-cover ${videos[0].height}`}
-              style={{ backgroundImage: `url(${videos[0].thumb})` }}
-            >
-              <i className="fas fa-play text-khandaq-orange text-5xl"></i>
-            </div>
-            <div className="text-لامشؤن" style={{color: "black", marginTop: "20px"}}>
-                <p>{videos[0].title}</p>
-                <p className="text-sm">20/07/2021</p>
-              </div>
-          </a>
+      {loading && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">
+            {lang === "en" ? "Loading..." : "جاري التحميل..."}
+          </p>
         </div>
+      )}
 
-        {/* Right column with two videos */}
-        <div className="lg:w-1/2 w-full flex flex-col gap-4">
-          {videos.slice(1, 4).map((video) => (
-            <a
-              key={video.id}
-              href={video.url}
-              target="_blank"
-              rel="noreferrer"
-              className=" text-black flex cursor-pointer items-center gap-4 bg-transparent hover:bg-gray-300 p-2 rounded transition"
-            >
-              <div
-                className={`flex-shrink-0 rounded bg-center bg-cover ${video.height} w-24 flex justify-center items-center`}
-                style={{ backgroundImage: `url(${video.thumb})` }}
-              >
-                <i className="fas fa-play text-khandaq-orange text-4xl"></i>
-              </div>
-              <div className="text-لامشؤن">
-                <p>{video.title}</p>
-                <p className="text-sm">20/07/2021</p>
-              </div>
-            </a>
-          ))}
+      {error && (
+        <div className="text-center py-8">
+          <p className="text-red-600">
+            {lang === "en" ? `Error: ${error}` : `خطأ: ${error}`}
+          </p>
         </div>
-      </div>
+      )}
+
+      {!loading && !error && videos.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">
+            {lang === "en" ? "No videos found" : "لا توجد فيديوهات متاحة"}
+          </p>
+        </div>
+      )}
+
+      {!loading && !error && videos.length > 0 && (
+        <div className="flex flex-col lg:flex-row mt-5 gap-6">
+          {/* Main player */}
+          <div className="lg:w-1/2 w-full">
+            {activeVideo && (
+              <iframe
+                width="100%"
+                height="380"
+                src={`https://www.youtube.com/embed/${activeVideo}`}
+                title="YouTube video player"
+                className="rounded"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            )}
+          </div>
+
+          {/* List of all videos */}
+          <div className="lg:w-1/2 w-full flex flex-col gap-4 max-h-[420px] overflow-y-auto">
+            {videos.map((video) => (
+              <button
+                key={video.id}
+                type="button"
+                onClick={() => setActiveVideo(video.id)}
+                className={`flex cursor-pointer items-center gap-4 p-2 rounded transition ${
+                  activeVideo === video.id
+                    ? "bg-gray-200"
+                    : "bg-transparent hover:bg-gray-100"
+                } ${lang === "ar" ? "text-right" : "text-left"}`}
+              >
+                <div
+                  className="flex-shrink-0 rounded bg-center bg-cover h-20 w-28 flex justify-center items-center"
+                  style={{ backgroundImage: `url(${video.thumb})` }}
+                >
+                  <i className="fas fa-play text-white text-3xl drop-shadow" />
+                </div>
+                <div className="flex-1 text-black">
+                  <p className="font-semibold line-clamp-2">
+                    {video.title || (lang === "en" ? "Untitled" : "بدون عنوان")}
+                  </p>
+                  {video.date && (
+                    <p className="text-sm text-gray-500 mt-1">{video.date}</p>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

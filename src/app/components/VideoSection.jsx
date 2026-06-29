@@ -3,14 +3,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 
-// Fallback demo data (removed if you pass your own `items` prop)
-const FALLBACK_VIDEOS = [
-  { id: "DP11ZlNPGRg", title_ar: "الأزمة الاقتصادية العالمية وأزمة 2008 هل يعيد التاريخ نفسه ؟", date: "20/07/2021" },
-  { id: "_iiXBbZ5FfM", title_ar: "سليماني بعيونهم الجزء 1", date: "20/07/2021" },
-  { id: "b-RMgVZiXkc", title_ar: "سليماني بعيونهم - الجزء 2", date: "20/07/2021" },
-  { id: "9Wx-9-ucnnw", title_ar: "من المسؤول عما وصلت إليه الليرة اليوم؟", date: "20/07/2021" },
-];
-
 /**
  * Optional bilingual item shape:
  * { id, title_ar, title_en, date }
@@ -37,7 +29,7 @@ export default function VideoSection({ items = [] }) {
     return () => mo.disconnect();
   }, []);
 
-  const list = useMemo(() => (items.length ? items : FALLBACK_VIDEOS), [items]);
+  const list = useMemo(() => items, [items]);
   const [activeVideo, setActiveVideo] = useState(list[0]?.id || "");
   useEffect(() => {
     // reset active if data changes

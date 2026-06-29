@@ -1,0 +1,78 @@
+import { NextResponse } from 'next/server';
+
+// Revalidate every 2 minutes
+export const revalidate = 120;
+
+const SERVER_BASE_URL = 'http://46.62.165.97:1337';
+const TOKEN = `Bearer 68aa8e860b375ed203796e994c90c4738eafe79765177a490e21940b71e23ceb8c1ee45036d2051d82816b719cd0592c6746b338a5335f056af588a73f3a4b3b7ee0d89902bdc923831d56f878abf3384c3da8272ae692b3ff8c415281107925052a92c6405234dfeeed79ff3160fe663aeda341aa08aae5e761b5f647277d6c`;
+const HOMEPAGE_URL = 'api/homepage';
+
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    // Videos live in the homepage single type. Mirror the homepage which
+    // sources its video list from the Arabic locale.
+    const locale = searchParams.get('locale') || 'ar';
+
+    const params = new URLSearchParams({
+      'populate[0]': 'video',
+      locale,
+    });
+
+    const serverUrl = `${SERVER_BASE_URL}/${HOMEPAGE_URL}?${params.toString()}`;
+
+    const response = await fetch(serverUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': TOKEN,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Kandak-News-Videos-Proxy/1.0',
+      },
+      next: { revalidate: 120 }, // Revalidate every 2 minutes
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Videos API error:', response.status, errorText);
+      return NextResponse.json(
+        { error: 'Failed to fetch videos', status: response.status },
+        { status: response.status }
+      );
+    }
+
+    const json = await response.json();
+    const videos = json?.data?.video || [];
+
+    return NextResponse.json(
+      { data: videos },
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        },
+      }
+    );
+  } catch (error) {
+    console.error('Videos proxy error:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error', message: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// Handle OPTIONS requests for CORS
+export async function OPTIONS(request) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}

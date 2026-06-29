@@ -27,8 +27,8 @@ export async function generateMetadata({ params }) {
   return metadata[lang] || metadata.ar;
 }
 
-export default function LangLayout({ children, params }) {
-  const { lang } = params;
+export default async function LangLayout({ children, params }) {
+  const { lang } = await params;
 
   return (
     <html lang={lang} dir={langToDir(lang)} suppressHydrationWarning>

@@ -43,28 +43,31 @@ const categoryMapping = {
 export default async function Home({ params }) {
   const { lang } = await params;
 
-  // Fetch all data in parallel
-  const [
-    homepageData,
-    localsRaw, internationalRaw, opinionRaw, israelisRaw,
-    cultureRaw, philosophyRaw, africaRaw, sportsRaw,
-    economyRaw, editorialRaw,
-  ] = await Promise.all([
-    getHomepage('ar'),
-    getAllByCategory("mhlyat", lang),
-    getAllByCategory("international-affairs", lang),
-    getAllByCategory("opinion", lang),
-    getAllByCategory("israeli-occupation", lang),
-    getAllByCategory("culture-and-media", lang),
-    getAllByCategory("philosophy", lang),
-    getAllByCategory("africa", lang),
-    getAllByCategory("sports", lang),
+  // Article sections + hero banner are curated in the homepage single type, per
+  // locale. Economy + editorial have no homepage relation, so they stay sourced
+  // by category. Video/infographics stay on the Arabic homepage (global content).
+  const [homepage, arHomepageForMedia, economyRaw, editorialRaw] = await Promise.all([
+    getHomepage(lang),
+    lang === "ar" ? Promise.resolve(null) : getHomepage("ar"),
     getAllByCategory("economy", lang),
     getAllByCategory("editorial-article", lang),
   ]);
-  const bannerData = homepageData?.data?.banner;
-  const videoData = homepageData?.data?.video;
-  const infographData = homepageData?.data?.infograpic;
+
+  const home = homepage?.data;
+  const mediaHome = (lang === "ar" ? homepage : arHomepageForMedia)?.data;
+
+  const videoData = mediaHome?.video;
+  const infographData = mediaHome?.infograpic;
+
+  // Curated article lists picked by the admin in the homepage single type
+  const localsRaw = home?.localandinternationalaffairs?.local || [];
+  const internationalRaw = home?.localandinternationalaffairs?.internations || [];
+  const opinionRaw = home?.opinion?.opinions || [];
+  const israelisRaw = home?.opinion?.israelis || [];
+  const cultureRaw = home?.cultureAndPhilosophy?.cultures || [];
+  const philosophyRaw = home?.cultureAndPhilosophy?.philosophies || [];
+  const africaRaw = home?.africaAndSport?.africas || [];
+  const sportsRaw = home?.africaAndSport?.sports || [];
 
   const isArabic = (text = '') => /[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]/.test(text);
   const matchesLang = (post) =>
@@ -81,6 +84,11 @@ export default async function Home({ params }) {
       url: `/${lang}/article/${post.documentId}`,
     }));
   };
+
+  // Hero banner (curated picks) with the same language safety filter applied
+  const bannerData = home?.banner
+    ? { ...home.banner, articles: (home.banner.articles || []).filter(matchesLang) }
+    : home?.banner;
 
   const take4 = (arr) => arr.slice(0, 4);
   const localPostsFromAPI = take4(transformPostData(localsRaw));

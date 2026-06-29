@@ -209,10 +209,88 @@ const searchByTag = async (tagQuery, limit = null, locale = null, page = 1) => {
 
 const getArticle = async (documentId) => {
   const response = await apiService.get(
-    `${ARTICLES_URL}/${documentId}?populate[0]=cover&populate[1]=author&populate[2]=author.avatar&populate[3]=articleContent&populate[5]=articleContent.image&populate[6]=tags`
+    `${ARTICLES_URL}/${documentId}?populate[0]=cover&populate[1]=author&populate[2]=author.avatar&populate[3]=articleContent&populate[5]=articleContent.image&populate[6]=tags&populate[7]=category`
   );
 
   return response.data;
+};
+
+// Fetch related articles for a given article.
+// Priority: articles sharing a tag first, then articles in the same category.
+// Excludes the current article, dedups, and applies the same Arabic/English
+// title filter used across the site so related list matches the active locale.
+const getRelatedArticles = async (article, locale = null, limit = 4) => {
+  if (!article) return [];
+
+  const currentId = article.documentId;
+  const tags = Array.isArray(article.tags) ? article.tags : [];
+  const categorySlug = article.category?.slug;
+
+  const isArabic = (text = "") => /[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]/.test(text);
+  const matchesLang = (post) =>
+    locale === "ar" ? isArabic(post?.title) : !isArabic(post?.title);
+
+  const populateParams =
+    "?populate%5B0%5D=cover&populate%5B1%5D=author&populate%5B2%5D=edition";
+  const url = `${ARTICLES_URL}${populateParams}`;
+  const FETCH_SIZE = 25;
+
+  // Up to 3 tags, one page each, to bound request cost
+  const tagNames = tags
+    .map((t) => (typeof t === "string" ? t : t.tagName || t.name))
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const fetchByTag = async (tagName) => {
+    const params = {
+      "filters[tags][tagName][$containsi]": tagName,
+      "pagination[page]": 1,
+      "pagination[pageSize]": FETCH_SIZE,
+    };
+    if (locale) params.locale = locale;
+    try {
+      const res = await apiService.get(url, params);
+      return res.data?.data || [];
+    } catch {
+      return [];
+    }
+  };
+
+  const fetchByCategory = async () => {
+    if (!categorySlug) return [];
+    const params = {
+      "filters[category][slug][$eq]": categorySlug,
+      "pagination[page]": 1,
+      "pagination[pageSize]": FETCH_SIZE,
+    };
+    if (locale) params.locale = locale;
+    try {
+      const res = await apiService.get(url, params);
+      return res.data?.data || [];
+    } catch {
+      return [];
+    }
+  };
+
+  const [tagResults, categoryMatched] = await Promise.all([
+    Promise.all(tagNames.map(fetchByTag)),
+    fetchByCategory(),
+  ]);
+  const tagMatched = tagResults.flat();
+
+  // Tag matches first (higher relevance), then same-category matches
+  const seen = new Set([currentId]);
+  const ordered = [];
+  for (const post of [...tagMatched, ...categoryMatched]) {
+    const id = post?.documentId;
+    if (!id || seen.has(id)) continue;
+    if (locale && !matchesLang(post)) continue;
+    seen.add(id);
+    ordered.push(post);
+    if (ordered.length >= limit) break;
+  }
+
+  return ordered;
 };
 
 const getEditions = async (page = 1, pageSize = 100) => {
@@ -291,6 +369,7 @@ export {
   searchByTitle,
   searchByTag,
   getArticle,
+  getRelatedArticles,
   getEditions,
   getEditionByNumber,
   getHomepage,

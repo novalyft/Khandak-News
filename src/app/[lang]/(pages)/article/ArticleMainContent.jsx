@@ -8,7 +8,13 @@ import { getCoverImageUrl } from "@/core/imageUtils";
 
 const ArticleMainContent = ({ title, content, articleContent, tags, lang }) => {
   return (
-    <div className="w-full lg:w-2/3 min-w-0 pl-0 lg:pl-8 lg:border-l lg:border-gray-600">
+    <div
+      className={`w-full lg:w-2/3 min-w-0 lg:border-gray-600 ${
+        lang === "ar"
+          ? "pl-0 lg:pl-8 lg:border-l"
+          : "pr-0 lg:pr-8 lg:border-r"
+      }`}
+    >
       <ArticleTitle title={title} />
 
       <div className="mb-8">
@@ -18,7 +24,7 @@ const ArticleMainContent = ({ title, content, articleContent, tags, lang }) => {
       {tags && tags.length > 0 && <ArticleTags tags={tags} lang={lang} />}
 
       {/* Article Content */}
-      <div className="prose prose-lg max-w-none" dir="rtl">
+      <div className="prose prose-lg max-w-none" dir={lang === "ar" ? "rtl" : "ltr"}>
         <div
           dangerouslySetInnerHTML={{ __html: content }}
           className="article-content text-black"
