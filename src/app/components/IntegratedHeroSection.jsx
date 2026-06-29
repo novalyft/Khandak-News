@@ -40,7 +40,7 @@ export default function IntegratedHeroSection({ bannerData }) {
 
   // Debug logging
   console.log("Banner data:", bannerData);
-  console.log("Articles:", articles);
+  console.log("Articles: ", articles);
   console.log("Articles length:", articles.length);
 
   return (
